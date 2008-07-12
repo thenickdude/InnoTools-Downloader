@@ -21,11 +21,11 @@ const
 
   //GUI consts
   second_column = 140;
-  vert_spacing =3;
+  vert_spacing = 3;
   box_width = 400;
 
 var
-  resultbuffer:string; //for returning huge strings
+  resultbuffer: string; //for returning huge strings
 
 type
   EErrorcode = class(exception)
@@ -60,7 +60,7 @@ type
 
     barCurrent, barTotal: TLiteProgress;
 
-    lblFile, lblSpeed, lblStatus, lblElapsedTime, lblRemainingTime, lblCurrent, 
+    lblFile, lblSpeed, lblStatus, lblElapsedTime, lblRemainingTime, lblCurrent,
       valFile, valSpeed, valStatus, valElapsedTime, valRemainingTime, valCurrent: tlitelabel;
 
     procedure DetailsClick(sender: TObject);
@@ -114,7 +114,7 @@ type
 
     function Count: integer;
 
-    function PostPage(const url, data:string; out resultbuffer:string):boolean;
+    function PostPage(const url, data: string; out resultbuffer: string): boolean;
 
     procedure Cancel;
     procedure CreateUI(hosthwnd: hwnd);
@@ -169,17 +169,17 @@ begin
 
   if DetailedMode then begin
     btnDetails.Caption := fStrings[IS_HideDetails];
-    btnDetails.Top := lblRemainingTime.top+lblRemainingTime.height+8;
+    btnDetails.Top := lblRemainingTime.top + lblRemainingTime.height + 8;
 
-    lblTotalProgress.Caption:=fStrings[IS_TotalProgress];  //WRONG
+    lblTotalProgress.Caption := fStrings[IS_TotalProgress]; //WRONG
   end else begin
     btnDetails.Caption := fStrings[IS_ShowDetails];
-    btnDetails.Top := barTotal.top+ barTotal.height+8;
+    btnDetails.Top := barTotal.top + barTotal.height + 8;
 
-    lblTotalProgress.Caption:=valStatus.caption;
+    lblTotalProgress.Caption := valStatus.caption;
   end;
 
-  pnlContainer.height := btnDetails.Top+btnDetails.height+8;
+  pnlContainer.height := btnDetails.Top + btnDetails.height + 8;
 end;
 
 procedure tui.setfilename(const value: string);
@@ -201,7 +201,7 @@ begin
   fstrings := strings;
 
   pnlContainer := TLitePanel.create(parent);
-  pnlContainer.ParentFont:=false;
+  pnlContainer.ParentFont := false;
   pnlContainer.font.name := 'MS Shell Dlg';
   pnlContainer.font.size := 14;
   pnlContainer.width := box_width;
@@ -231,9 +231,9 @@ begin
   pnlContainer.addchild(lblCurrent);
 
   valCurrent := TLiteLabel.create(parent);
-  valCurrent.width:=150;
+  valCurrent.width := 150;
   valCurrent.align := laRight;
-  valCurrent.AutoSize:=false;
+  valCurrent.AutoSize := false;
   valCurrent.caption := '';
   valCurrent.Top := lblCurrent.top;
   valCurrent.left := box_width - valcurrent.width;
@@ -241,19 +241,19 @@ begin
 
   barCurrent := TLiteProgress.create(parent);
   barCurrent.width := box_width;
-  barCurrent.Top := lblCurrent.top+ lblCurrent.height+ vert_spacing;
+  barCurrent.Top := lblCurrent.top + lblCurrent.height + vert_spacing;
   pnlContainer.addchild(barCurrent);
 
   lblFile := tlitelabel.create(parent);
   lblFile.autosize := true;
   lblFile.caption := Strings[IS_File];
-  lblFile.top := barCurrent.top+barCurrent.height+vert_spacing*3;
+  lblFile.top := barCurrent.top + barCurrent.height + vert_spacing * 3;
   pnlContainer.addchild(lblFile);
 
   valFile := TLiteLabel.create(parent);
   valFile.caption := '';
   valFile.left := second_column;
-  valFile.top:=lblFile.top;
+  valFile.top := lblFile.top;
   pnlContainer.addchild(valFile);
 
   lblSpeed := TLiteLabel.create(parent);
@@ -280,7 +280,7 @@ begin
 
   lblelapsedtime := TLiteLabel.create(parent);
   lblelapsedtime.caption := Strings[IS_ElapsedTime];
-  lblelapsedtime.top := lblStatus.top+ lblStatus.height + vert_spacing;
+  lblelapsedtime.top := lblStatus.top + lblStatus.height + vert_spacing;
   pnlContainer.addchild(lblElapsedTime);
 
   valElapsedtime := TLiteLabel.create(parent);
@@ -291,7 +291,7 @@ begin
 
   lblRemainingTime := TLiteLabel.create(parent);
   lblRemainingtime.caption := Strings[IS_RemainingTime];
-  lblremainingtime.top := lblElapsedTime.top+ lblElapsedTime.height + vert_spacing;
+  lblremainingtime.top := lblElapsedTime.top + lblElapsedTime.height + vert_spacing;
   pnlContainer.addchild(lblRemainingTime);
 
   valRemainingtime := TLiteLabel.create(parent);
@@ -428,9 +428,9 @@ begin
   result := fui;
 end;
 
-function TITDEngine.PostPage(const url, data: string; out resultbuffer:string): boolean;
+function TITDEngine.PostPage(const url, data: string; out resultbuffer: string): boolean;
 begin
- result:=fWE.PostPage(url,data, resultbuffer);
+  result := fWE.PostPage(url, data, resultbuffer);
 end;
 
 procedure TITDEngine.setUI(value: TUI);
@@ -694,21 +694,23 @@ begin
   processmessages;
 
   try
-    for t1 := 0 to files.count - 1 do begin
-      if fdownloadDelay > 0 then begin
+    if assigned(ui) then begin
+      for t1 := 0 to files.count - 1 do begin
+        if fdownloadDelay > 0 then begin
       { If we want a download delay, simulate a delay in connecting to the server
         to get file size}
-        for i := 1 to 3 do begin
-          processmessages;
-          sleep(100);
+          for i := 1 to 3 do begin
+            processmessages;
+            sleep(100);
+          end;
         end;
-      end;
-      if TDLFile(files[t1]).size = 0 then
-        TDLFile(files[t1]).querysize(fWE);
+        if TDLFile(files[t1]).size = 0 then
+          TDLFile(files[t1]).querysize(fWE);
 
-      processmessages;
-      if ShouldCancel then
-        raise EErrorcode.Create(ITDERR_USERCANCEL);
+        processmessages;
+        if ShouldCancel then
+          raise EErrorcode.Create(ITDERR_USERCANCEL);
+      end;
     end;
 
     fTotalStartTime := now;
@@ -763,18 +765,19 @@ begin
       ui.valCurrent.caption := '';
       ui.valSpeed.caption := '';
       ui.valRemainingTime.caption := '';
-    end;
 
-    ui.barCurrent.Marquee:=false;
-    ui.barTotal.Marquee:=false;
+    ui.barCurrent.Marquee := false;
+    ui.barTotal.Marquee := false;
 
-    ui.barCurrent.Position:=0;
+    ui.barCurrent.Position := 0;
 
     ui.barCurrent.Visible := false;
     ui.lblCurrent.visible := false;
     ui.valCurrent.Visible := false;
 
     ui.valTotalProgress.visible := false;
+    end;    
+
     raise;
   end;
 end;
@@ -872,44 +875,49 @@ end;
 
 function itd_getstring(index: integer): boolean; stdcall;
 begin
- resultbuffer := engine.Strings[index];
- result:=length(resultbuffer)>0;
+  resultbuffer := engine.Strings[index];
+  result := length(resultbuffer) > 0;
 end;
 
-function itd_postpage(url:pchar; buffer:pchar; length:integer):boolean; stdcall;
-var data:string;
+function itd_postpage(url: pchar; buffer: pchar; length: integer): boolean; stdcall;
+var data: string;
 begin
   try
-    setlength(data,length);
+    setlength(data, length);
     Move(buffer^, data[1], length);
-    result:=engine.PostPage(url,data, resultbuffer);
+    result := engine.PostPage(url, data, resultbuffer);
   except
     result := false;
   end;
 end;
 
-function min(a,b:integer):integer;
+function min(a, b: integer): integer;
 begin
-   if a<b then
-   result:=a
-   else
-   result:=b;
+  if a < b then
+    result := a
+  else
+    result := b;
 end;
 
 
-procedure itd_getresultstring(buffer:pchar; maxlen:integer); stdcall;
+procedure itd_getresultstring(buffer: pchar; maxlen: integer); stdcall;
 begin
-  move(resultbuffer[1], buffer^, min(length(resultbuffer),maxlen));
+  move(resultbuffer[1], buffer^, min(length(resultbuffer), maxlen));
 end;
 
-function itd_getresultlen:integer;
+function itd_getfilesize(url: pchar; var size: cardinal): boolean; stdcall;
 begin
-  result:=length(resultbuffer);
+  result := engine.fWE.GetWebFileSize(url, size);
+end;
+
+function itd_getresultlen: integer; stdcall;
+begin
+  result := length(resultbuffer);
 end;
 
 exports itd_downloadfile, itd_addfile, itd_addfilesize, itd_clearfiles, itd_downloadfiles, itd_initui,
   itd_cancel, itd_setoption, itd_getoption, itd_filecount, itd_setstring, itd_getstring, itd_loadstrings,
-  itd_addmirror, itd_postpage, itd_getresultstring, itd_getresultlen;
+  itd_addmirror, itd_postpage, itd_getresultstring, itd_getresultlen, itd_getfilesize;
 
 initialization
   engine := TITDEngine.create;

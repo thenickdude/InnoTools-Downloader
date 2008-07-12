@@ -51,6 +51,9 @@ function ITD_Internal_LoadStrings(filename:PChar):boolean;
 procedure ITD_Internal_SetOption(option, value: PChar);
   external 'itd_setoption@files:itdownload.dll stdcall';
 
+function ITD_Internal_GetFileSize(url:pchar; var size:Cardinal): boolean;
+  external 'itd_getfilesize@files:itdownload.dll stdcall';
+
 function ITD_Internal_GetString(index:integer): boolean;
   external 'itd_getstring@files:itdownload.dll stdcall';
 
@@ -125,6 +128,11 @@ end;
 procedure ITD_SetString(index:integer; value:string);
 begin
   itd_internal_setstring(index,value);
+end;
+
+function ITD_GetFileSize(const url:string; var size:cardinal):boolean;
+begin
+  result:=itd_internal_getfilesize(PChar(url), size);
 end;
 
 function ITD_LoadStrings(const filename:string):boolean;

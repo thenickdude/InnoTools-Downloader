@@ -10,7 +10,7 @@ interface
 
 
 uses SysUtils, blcksock, classes, windows, wininet, proceduretomethod, httpsend,
-  synautil, messages, ftpsend;
+  synautil, messages, ftpsend, math;
 
 type
   TDownloadStage = (dsStartingDownload, dsDownloading, dsDone, dsError);
@@ -25,6 +25,7 @@ type
     furl: string;
     fFtp: TFTPSend;
   protected
+    procedure Abort;
     constructor create(const url: string; ftp: TFTPSend);
     procedure Execute; override;
 
@@ -38,6 +39,7 @@ type
     furl: string;
     fhttp: THTTPSend;
   protected
+    procedure Abort;
     constructor create(const url: string; http: THTTPSend);
     procedure Execute; override;
 
@@ -52,6 +54,7 @@ type
     furl: string;
     fFtp: TFTPSend;
   protected
+    procedure Abort;
     constructor create(const url: string; ftp: TFTPSend);
     procedure Execute; override;
 
@@ -67,6 +70,7 @@ type
     furl: string;
     fhttp: THTTPSend;
   protected
+    procedure Abort;
     constructor create(const url: string; http: THTTPSend);
     procedure Execute; override;
 
@@ -81,6 +85,7 @@ type
     furl, fData: string;
     fhttp: THTTPSend;
   protected
+    procedure Abort;
     constructor create(const url, data: string; http: THTTPSend);
     procedure Execute; override;
 
@@ -120,7 +125,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function PostPage(const url, data: string; out resultbuffer:string): boolean;
+    function PostPage(const url, data: string; out resultbuffer: string): boolean;
 
     function GetWebFileSize(const url: string; out size: longword): boolean;
     function DownloadWebFileToStream(const url: string; stream: TStream;
@@ -137,9 +142,118 @@ implementation
 
 uses liteui;
 
-//Set up the proxy information from IE settings
-procedure SetProxy(http:THTTPSend);
+function InternetQueryString(option: cardinal): string;
+var buf: string;
+  len: cardinal;
 begin
+  setlength(buf, 1000);
+
+  len := length(buf);
+
+  if InternetQueryOption(nil, option, @buf[1], len) then begin
+    setlength(buf, len);
+    result := buf;
+  end else
+    result := '';
+end;
+
+{Unpack a 'key=value;key=value;' or 'key=value key=value' or 'value' list
+ of proxy addresses from INTERNET_PROXY_INFO. 'value' is an 'all' proxy, for all protocols}
+
+procedure UnpackProxyList(list: string; parts: TStringList);
+var sep: integer;
+  eq, semi, space: integer;
+  piece: string;
+begin
+  while (length(list) > 0) do begin
+
+    semi := pos(';', list);
+    space := pos(' ', list);
+
+    if (semi = 1) or (space = 1) then begin
+  //Leading separators
+      Delete(list, 1, 1);
+      continue;
+    end;
+
+    if (semi > 0) or (space > 0) then begin
+  //More than one piece to process
+
+  //Get the first separator
+      if (semi <> 0) and (space <> 0) then
+        sep := min(semi, space)
+      else if (semi <> 0) then
+        sep := semi
+      else
+        sep := space;
+
+  //Grab that first chunk
+      piece := copy(list, 1, sep - 1);
+      list := copy(list, sep + 1, length(list));
+    end else begin
+ //Only one piece remaining
+      piece := list;
+      list := '';
+    end;
+
+ //Process the piece
+
+    eq := pos('=', piece);
+    if eq > 0 then begin
+    //Key/value pair
+      parts.Values[lowercase(copy(piece, 1, eq - 1))] := copy(piece, eq + 1, length(piece));
+    end else begin
+     //No key/value
+      parts.Values['all'] := piece;
+    end;
+  end;
+end;
+
+//Set up the proxy information from IE settings
+
+procedure SetProxy(http: THTTPSend);
+var
+  buffer: array[0..4095] of byte;
+  info: TInternetProxyInfo absolute buffer;
+  len: cardinal;
+  host: string;
+  list: TStringList;
+begin
+ { InternetQueryOption fails with ERROR_INSUFFICIENT_BUFFER if the buffer is
+   SizeOf(TInternetProxyInfo) bytes, had to make it big to have it work. MSDN
+   shows the same thing in their example code. Weird.}
+  len := sizeof(buffer);
+  if InternetQueryOption(nil, INTERNET_OPTION_PROXY, @info, len) then begin
+    if info.dwAccessType = INTERNET_OPEN_TYPE_PROXY then begin
+
+      host := info.lpszProxy;
+
+      list := TStringList.create;
+      try
+        UnpackProxyList(host, list);
+
+        if length(list.Values['http']) > 0 then
+          host := list.values['http']
+        else if length(list.Values['all']) > 0 then
+          host := list.values['all']
+        else exit; //no proxy for this protocol
+
+      finally
+        list.free;
+      end;
+      if RPos(':', host) > 0 then begin
+      //Includes a port specification
+        http.ProxyPort := Copy(host, RPos(':', host) + 1, length(host));
+        http.ProxyHost := Copy(host, 1, RPos(':', host) - 1);
+      end else begin
+        http.ProxyHost := host;
+      end;
+
+      http.ProxyUser := InternetQueryString(INTERNET_OPTION_PROXY_USERNAME);
+      http.ProxyPass := InternetQueryString(INTERNET_OPTION_PROXY_PASSWORD);
+    end;
+  end {else if GetLastError=ERROR_INSUFFICIENT_BUFFER then
+   showmessage('Not enough buf');}
 
 end;
 
@@ -215,7 +329,7 @@ begin
   end;
 end;
 
-function TDownloadEngine.PostPage(const url, data: string; out resultbuffer:string): boolean;
+function TDownloadEngine.PostPage(const url, data: string; out resultbuffer: string): boolean;
 var thread: TPostThread;
 begin
   fhttp := THTTPSend.Create;
@@ -231,6 +345,8 @@ begin
       thread.Resume;
       while not thread.operationDone do begin
         handlemessage;
+        if terminated then
+          thread.abort;
       end;
 
       if thread.operationsuccess then begin
@@ -305,6 +421,8 @@ begin
     thread.Resume;
     while not thread.operationDone do begin
       handlemessage;
+      if terminated then
+        thread.abort;
     end;
 
     if thread.operationsuccess then begin
@@ -346,6 +464,8 @@ begin
       thread.Resume;
       while not thread.operationDone do begin
         handlemessage;
+        if terminated then
+          thread.abort;
       end;
 
       if thread.operationsuccess then begin
@@ -383,6 +503,8 @@ begin
   thread.Resume;
   while not thread.operationDone do begin
     handlemessage;
+    if terminated then
+      thread.abort;
   end;
 
   if thread.operationsuccess then begin
@@ -404,6 +526,8 @@ begin
     thread.Resume;
     while not thread.operationDone do begin
       handlemessage;
+      if terminated then
+        thread.abort;
     end;
 
     if thread.operationsuccess then begin
@@ -417,6 +541,11 @@ begin
   end;
 end;
 
+
+procedure TFTPGetThread.Abort;
+begin
+  fftp.Abort;
+end;
 
 constructor TFTPGetThread.create(const url: string; ftp: TFTPSend);
 begin
@@ -448,6 +577,11 @@ begin
 end;
 
 { TGetThread }
+
+procedure TGetThread.Abort;
+begin
+  fhttp.Abort;
+end;
 
 constructor TGetThread.create(const url: string; http: THTTPSend);
 begin
@@ -491,6 +625,11 @@ begin
 end;
 
 { THeadThread }
+
+procedure THeadThread.Abort;
+begin
+  fhttp.abort;
+end;
 
 constructor THeadThread.create(const url: string; http: THTTPSend);
 begin
@@ -536,6 +675,11 @@ end;
 
 { TFTPSizeThread }
 
+procedure TFTPSizeThread.Abort;
+begin
+  fftp.abort;
+end;
+
 constructor TFTPSizeThread.create(const url: string; ftp: TFTPSend);
 begin
   inherited create(true);
@@ -561,6 +705,11 @@ begin
 end;
 
 { TPostThread }
+
+procedure TPostThread.Abort;
+begin
+  fhttp.abort;
+end;
 
 constructor TPostThread.create(const url, data: string; http: THTTPSend);
 begin

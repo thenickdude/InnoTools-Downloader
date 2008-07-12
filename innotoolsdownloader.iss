@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "InnoTools Downloader"
-#define MyAppVerName "InnoTools Downloader 0.3 alpha"
+#define MyAppVerName "InnoTools Downloader 0.3.1 alpha"
 #define MyAppPublisher "Sherlock Software"
 #define MyAppURL "http://www.sherlocksoftware.org"
 #define MyAppUrlName "Sherlock Software.url"
@@ -21,7 +21,7 @@ Compression=lzma
 SolidCompression=true
 OutputDir=.
 SetupLogging=false
-LicenseFile=C:\sherlocksoftware\innotools\itd\Licence.txt
+LicenseFile=Licence.txt
 
 
 [Languages]
@@ -35,8 +35,11 @@ Source: example1.iss; DestDir: {app}\examples
 Source: example2.iss; DestDir: {app}\examples
 Source: example3 1.0.iss; DestDir: {app}\examples
 Source: example3 2.0.iss; DestDir: {app}\examples
+Source: example4.iss; DestDir: {app}\examples
 Source: ITDHelp.chm; DestDir: {app}
-Source: source\*; DestDir: {app}\Source
+Source: source\*.pas; DestDir: {app}\Source
+Source: source\*.dpr; DestDir: {app}\Source
+Source: source\*.dproj; DestDir: {app}\Source
 Source: languages\*; DestDir: {app}\languages
 
 [Run]
