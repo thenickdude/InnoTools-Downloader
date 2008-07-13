@@ -21,12 +21,13 @@ ShowLanguageDialog=yes
 [Languages]
 Name: en; MessagesFile: compiler:Default.isl
 Name: leet; MessagesFile: compiler:Languages\French.isl
+Name: gr; MessagesFile: compiler:Languages\German.isl
 
 #include ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','ScriptPath','');
 
 [Files]
-Source: languages\itd_leet.ini; Flags: dontcopy
-Source: languages\itd_en.ini; Flags: dontcopy
+Source: ..\languages\itd_leet.ini; Flags: dontcopy
+Source: ..\languages\itd_en.ini; Flags: dontcopy
 
 [Code]
 { EXAMPLE 4
@@ -37,21 +38,35 @@ Source: languages\itd_en.ini; Flags: dontcopy
   (since ITD doesn't have a French translation yet) I've renamed
   it to "leet", to use the "leetspeak" translation I wrote.. :)}
 
-procedure InitializeWizard();
+
+{Load the ITD language file that corresponds to Inno's selected
+ language}
+procedure LoadITDLang;
 var lang:string;
+begin
+ lang:=ExpandConstant('{language}');
+
+ try
+   ExtractTemporaryFile('itd_'+lang+'.ini');
+
+   ITD_LoadStrings(expandconstant('{tmp}\itd_'+lang+'.ini'));
+ except
+   {We get here if the selected language wasn't included in the
+    set of ITD translation files. In this case, just use ITD's
+    built in translation file (English), by not loading anything.
+
+    Note that the exception will still appear while debugging -
+    you can turn this off in Inno Setup Compiler options
+    ("Pause on exceptions"), or just ignore it. It doesn't appear
+    at runtime.}
+ end;
+end;
+
+procedure InitializeWizard();
 begin
  itd_init;
 
- {Extract the correct ITD language file for InnoSetup's
-  chosen language.}
-
- lang:=ExpandConstant('{language}');
-
- if (lang<>'leet') and (lang<>'en') then
-  lang:='en';
-
- ExtractTemporaryFile('itd_'+lang+'.ini');
- itd_loadstrings(expandconstant('{tmp}\itd_'+lang+'.ini'));
+ LoadITDLang;
 
  //Let's download two zipfiles from my website..
  itd_addfile('http://www.sherlocksoftware.org/petz/files/dogz5.zip',expandconstant('{tmp}\dogz5.zip'));

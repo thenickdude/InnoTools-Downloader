@@ -766,17 +766,17 @@ begin
       ui.valSpeed.caption := '';
       ui.valRemainingTime.caption := '';
 
-    ui.barCurrent.Marquee := false;
-    ui.barTotal.Marquee := false;
+      ui.barCurrent.Marquee := false;
+      ui.barTotal.Marquee := false;
 
-    ui.barCurrent.Position := 0;
+      ui.barCurrent.Position := 0;
 
-    ui.barCurrent.Visible := false;
-    ui.lblCurrent.visible := false;
-    ui.valCurrent.Visible := false;
+      ui.barCurrent.Visible := false;
+      ui.lblCurrent.visible := false;
+      ui.valCurrent.Visible := false;
 
-    ui.valTotalProgress.visible := false;
-    end;    
+      ui.valTotalProgress.visible := false;
+    end;
 
     raise;
   end;
