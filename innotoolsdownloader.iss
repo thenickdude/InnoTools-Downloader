@@ -48,6 +48,7 @@ Filename: {app}\ITDHelp.chm; Flags: shellexec skipifdoesntexist postinstall skip
 [Icons]
 Name: {group}\Visit Sherlock Software; Filename: http://www.sherlocksoftware.org
 Name: {group}\Read help file; Filename: {app}\ITDHelp.chm
+Name: {group}\Examples; Filename: {app}\examples
 Name: {group}\{cm:UninstallProgram,{#MyAppName}}; Filename: {uninstallexe}
 
 [Registry]

@@ -5,7 +5,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
 (*
  Inno Tools Downloader DLL
  Copyright (C) Sherlock Software 2006
- Version 0.3.0 Alpha
+ Version 0.3.1 Alpha
 
  Contact:
   The author, Nicholas Sherlock, at nick@sherlocksoftware.org.
@@ -15,6 +15,10 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
   http://www.sherlocksoftware.org
 
  History:
+  0.3.1 - Added language file examples, fixed several missing language strings
+          Preliminary support for proxy server autodetection
+          Allows the size of a file to be queried with ITD_GetFileSize
+          Several small bugfixes
   0.3.0 - Properly supports timeouts.
           Fixes bug with time remaining.
           DLL is required again.
