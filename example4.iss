@@ -20,24 +20,23 @@ ShowLanguageDialog=yes
 
 [Languages]
 Name: en; MessagesFile: compiler:Default.isl
-Name: leet; MessagesFile: compiler:Languages\French.isl
-Name: gr; MessagesFile: compiler:Languages\German.isl
+Name: fr; MessagesFile: compiler:Languages\French.isl
+Name: nl; MessagesFile: compiler:Languages\Dutch.isl
 
-#include ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','ScriptPath','');
+#define ITDRoot ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')
+
+#include ITDRoot+'\it_download.iss'
 
 [Files]
-Source: ..\languages\itd_leet.ini; Flags: dontcopy
-Source: ..\languages\itd_en.ini; Flags: dontcopy
+Source: {#ITDRoot}\languages\*.ini; Flags: dontcopy
 
 [Code]
 { EXAMPLE 4
 
-  In this example, a translation for the UI is read from a file.
-
-  The second language I've defined in [Languages] is French, but
-  (since ITD doesn't have a French translation yet) I've renamed
-  it to "leet", to use the "leetspeak" translation I wrote.. :)}
-
+  In this example, a translation for the UI is read from a file. If the
+  language name from the [Languages] section matches the one in the filename
+  of an ITD language file, it is used. Otherwise, English is used.
+}
 
 {Load the ITD language file that corresponds to Inno's selected
  language}
