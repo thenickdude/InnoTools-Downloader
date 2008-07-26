@@ -5,19 +5,25 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
 (*
  Inno Tools Downloader DLL
  Copyright (C) Sherlock Software 2008
- Version 0.3.2
+ Version 0.3.3
 
  Contact:
   The author, Nicholas Sherlock, at nick@sherlocksoftware.org.
   Comments, questions and suggestions welcome.
 
  Website:
-  http://www.sherlocksoftware.org
+  http://www.sherlocksoftware.org/
 
  History:
-  0.3.2 - Minor tweaks to English language file and example script
+  0.3.3 - The "Hilbrand Edskes" release :), lots of suggestions and corrections from him, thank you!
+          The "Retry" button is now translated.
+          The "Current file" progress bar is hidden if only one file is being downloaded.
+          The page's title and description are updated in the case of failed downloads.
+          Several updates to the translations.
+          Several small GUI fixes.
+  0.3.2 - Minor tweaks to the English language file and the translation example script (example4.iss)
+          Added Dutch translation by Hilbrand Edskes
           Added French translation by Néo
-          Added Dutch translation Hilbrand Edskes
   0.3.1 - Added language file examples, fixed several missing language strings
           Preliminary support for proxy server autodetection
           Allows the size of a file to be queried with ITD_GetFileSize
@@ -95,16 +101,20 @@ const
   ITDERR_ERROR = 3;
 
   {Constants for Language String indexes:}
+  ITDS_DownloadFailed=104;
+
   ITDS_TitleCaption=200;
   ITDS_TitleDescription=201;
 
   ITDS_MessageFailRetryContinue=250;
   ITDS_MessageFailRetry=251;
 
+  ITDS_Retry=502;
+
 var
   itd_allowcontinue: boolean;
   itd_retryonback: boolean;
-  
+
   ITD_AfterSuccess:procedure(downloadPage:TWizardPage);
 
 procedure ITD_DownloadFiles();
@@ -160,28 +170,38 @@ begin
   wizardform.backbutton.enabled := false;
   wizardform.nextbutton.enabled := false;
 
+  sender.caption:=ITD_GetString(ITDS_TitleCaption);
+  sender.description:=ITD_GetString(ITDS_TitleDescription);
+
   err := ITD_Internal_DownloadFiles(sender.surface.handle);
 
   case err of
     ITDERR_SUCCESS: begin
         wizardform.nextbutton.enabled := true;
         wizardform.nextbutton.onclick(nil);
-        
+
         if itd_aftersuccess<>nil then
           itd_aftersuccess(sender);
       end;
     ITDERR_USERCANCEL: ; //Don't show a message, this happens on setup close and cancel click
   else begin
-    //Some unexpected error
-      wizardform.backbutton.caption := 'Retry';
+    //Some unexpected error, like connection interrupted
+      wizardform.backbutton.caption := ITD_GetString(ITDS_Retry);
       wizardform.backbutton.enabled := true;
       wizardform.backbutton.show();
       itd_retryonback := true;
 
+      wizardform.nextbutton.enabled := itd_allowcontinue;
+
       if itd_allowcontinue then begin //Download failed, we can retry, continue, or exit
-        wizardform.nextbutton.enabled := true;
+        sender.caption:=ITD_GetString(ITDS_DownloadFailed);
+        sender.description:=ITD_GetString(ITDS_MessageFailRetryContinue);
+
         MsgBox(ITD_GetString(ITDS_MessageFailRetryContinue), mbError, MB_OK)
       end else begin //Download failed, we must retry or exit setup
+        sender.caption:=ITD_GetString(ITDS_DownloadFailed);
+        sender.description:=ITD_GetString(ITDS_MessageFailRetry);
+
         MsgBox(ITD_GetString(ITDS_MessageFailRetry), mbError, MB_OK)
       end;
     end;
@@ -201,6 +221,7 @@ begin
   result := false;
   if itd_retryonback then begin
     itd_retryonback := false;
+    wizardform.backbutton.hide();
     itd_nowdodownload(sender);
   end;
 end;
@@ -213,7 +234,7 @@ end;
 function ITD_PostPage(const url, data:string; out response:string):boolean;
 begin
   result:=ITD_Internal_PostPage(PChar(url), PChar(data), length(data));
-  
+
   if result then begin
     setlength(response, ITD_GetResultLen);
     ITD_GetResultString(PChar(response), length(response));
@@ -230,7 +251,7 @@ begin
   itd_downloadpage.onbackbuttonclick := @itd_handlebackclick;
 
   itd_internal_initui(itd_downloadpage.surface.handle);
-  
+
   result:=itd_downloadpage;
 end;
 

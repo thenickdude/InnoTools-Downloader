@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "InnoTools Downloader"
-#define MyAppVerName "InnoTools Downloader 0.3.2"
+#define MyAppVerName "InnoTools Downloader 0.3.3"
 #define MyAppPublisher "Sherlock Software"
 #define MyAppURL "http://www.sherlocksoftware.org"
 #define MyAppUrlName "Sherlock Software.url"
@@ -47,7 +47,7 @@ Source: languages\*; DestDir: {app}\languages
 Filename: {app}\ITDHelp.chm; Flags: shellexec skipifdoesntexist postinstall skipifsilent; Languages: ; Description: View the help file
 
 [Icons]
-Name: {group}\Visit Sherlock Software; Filename: http://www.sherlocksoftware.org
+Name: {group}\Visit Sherlock Software; Filename: http://www.sherlocksoftware.org/
 Name: {group}\Read help file; Filename: {app}\ITDHelp.chm
 Name: {group}\Examples; Filename: {app}\examples
 Name: {group}\{cm:UninstallProgram,{#MyAppName}}; Filename: {uninstallexe}

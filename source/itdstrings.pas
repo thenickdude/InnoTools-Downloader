@@ -59,13 +59,14 @@ const
 
   IS_ShowDetails = 500;
   IS_HideDetails = 501;
+  IS_Retry = 502;
 
 const
-  DefaultStrings: array[0..35] of TDefaultString = (
+  DefaultStrings: array[0..36] of TDefaultString = (
     (id: IS_GettingFileInformation; text: 'Getting file information...'),
     (id: IS_StartingDownload; text: 'Starting download...'),
     (id: IS_Downloading; text: 'Downloading...'),
-    (id: IS_DownloadingSimple; text: 'Downloading (%s) ...'),
+    (id: IS_DownloadingSimple; text: 'Downloading (%s)...'),
     (id: IS_DownloadComplete; text: 'Download complete!'),
     (id: IS_DownloadFailed; text: 'Download failed.'),
 
@@ -73,10 +74,10 @@ const
     (id: IS_TitleDescription; text: 'Please wait while setup downloads additional files...'),
 
     (id: IS_MessageFailRetryContinue; text: 'Sorry, the files could not be downloaded. ' +
-    'Click retry to try downloading the files again, or click next to continue installing anyway.'),
+    'Click ''Retry'' to try downloading the files again, or click ''Next'' to continue installing anyway.'),
 
     (id: IS_MessageFailRetry; text: 'Sorry, the files could not be downloaded. ' +
-    'Click retry to try downloading the files again, or click cancel to terminate setup.'),
+    'Click ''Retry'' to try downloading the files again, or click ''Cancel'' to terminate setup.'),
 
     (id: IS_File; text: 'File:'),
     (id: IS_Speed; text: 'Speed:'),
@@ -106,7 +107,8 @@ const
     (id: IS_Gigabyte; text: 'GB'),
 
     (id: IS_ShowDetails; text: 'Details'),
-    (id: IS_HideDetails; text: 'Hide')
+    (id: IS_HideDetails; text: 'Hide'),
+    (id: IS_Retry; text: 'Retry')
     );
 
 

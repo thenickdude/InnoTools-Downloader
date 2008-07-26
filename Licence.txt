@@ -13,5 +13,4 @@ This license does not restrict the ability for me to make ITD available under di
 Nicholas Sherlock
 
 Sherlock Software
-http://www.sherlocksoftware.org
-
+http://www.sherlocksoftware.org/

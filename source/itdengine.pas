@@ -17,7 +17,7 @@ const
   ITDERR_USERCANCEL = 1;
   ITDERR_ERROR = 3;
 
-  itdversion = '0.3 alpha';
+  itdversion = '0.3.3';
 
   //GUI consts
   second_column = 140;
@@ -47,10 +47,10 @@ type
 
   TUI = class
   private
-    fDetailsMode: boolean;
-    fparent: hwnd;
+    FDetailedMode, FSingleFileMode: boolean;
+    FParent: hwnd;
 
-    fStrings: TITDStrings;
+    FStrings: TITDStrings;
 
     btnDetails: TLiteButton;
 
@@ -67,8 +67,11 @@ type
     procedure SetStatus(const value: string);
     procedure SetFilename(const value: string);
     procedure SetDetailsMode(const Value: boolean);
+    procedure RearrangeUI;
+    procedure SetSingleFileMode(const Value: boolean);
   public
-    property DetailedMode: boolean read fDetailsMode write SetDetailsMode;
+    property DetailedMode: boolean read FDetailedMode write SetDetailsMode;
+    property SingleFileMode: boolean read FSingleFileMode write SetSingleFileMode;
     property Status: string write setstatus;
     property Filename: string write setfilename;
     constructor Create(parent: hwnd; strings: TITDStrings);
@@ -77,25 +80,25 @@ type
 
   TITDEngine = class
   private
-    fWE: TDownloadEngine;
+    FWE: TDownloadEngine;
 
-    fTotalStartTime, fFileStartTime: TDateTime;
-    fTotalBytesWritten: cardinal; //Total bytes of all completely downloaded files so far
+    FTotalStartTime, FFileStartTime: TDateTime;
+    FTotalBytesWritten: cardinal; //Total bytes of all completely downloaded files so far
 
-    fFiles: tobjectlist;
+    FFiles: tobjectlist;
 
-    fTotalSizeUnknown: boolean;
+    FTotalSizeUnknown: boolean;
 
-    fLastProgress: TDateTime;
+    FLastProgress: TDateTime;
 
-    fdownloaddelay: integer;
-    fcancel: boolean;
-    fsmooth, fdebugmessages: boolean;
+    FDownloadDelay: integer;
+    FCancel: boolean;
+    FSmooth, FDebugMessages: boolean;
 
-    options: tstringlist;
-    fuis: TObjectList;
-    fui: TUI; //currently selected UI
-    fstrings: TITDStrings; //localization strings
+    FOptions: tstringlist;
+    FUIs: TObjectList;
+    FUI: TUI; //currently selected UI
+    FStrings: TITDStrings; //localization strings
     function getfile(index: integer): TDLFile;
     function downloadlist(files: tobjectlist): integer;
     function shouldcancel: Boolean;
@@ -110,7 +113,7 @@ type
     function UIByHandle(handle: hwnd): TUI;
 
     property UI: TUI read getUI write setUI; //currently selected UI
-    property Strings: TITDStrings read fstrings write fstrings;
+    property Strings: TITDStrings read FStrings write FStrings;
 
     function Count: integer;
 
@@ -127,8 +130,8 @@ type
     function DownloadFiles(surface: hwnd): integer;
 
     property Files[index: integer]: TDLFile read getfile;
-    property DownloadDelay: integer read fdownloaddelay write fdownloaddelay;
-    property DebugMessages: boolean read fDebugMessages write fDebugMessages;
+    property DownloadDelay: integer read FDownloadDelay write FDownloadDelay;
+    property DebugMessages: boolean read FDebugMessages write FDebugMessages;
 
     constructor Create;
     destructor Destroy; override;
@@ -146,34 +149,57 @@ begin
   errcode := code;
 end;
 
-procedure TUI.SetDetailsMode(const Value: boolean);
+procedure TUI.RearrangeUI;
 begin
-  fDetailsMode := Value;
+  barCurrent.visible := DetailedMode and not SingleFileMode;
+  lblCurrent.visible := DetailedMode and not SingleFileMode;
+  valCurrent.visible := DetailedMode and not SingleFileMode;
 
-  barCurrent.visible := value;
-  lblFile.visible := value;
-  lblSpeed.visible := value;
-  lblStatus.visible := value;
-  lblElapsedTime.visible := value;
-  lblRemainingTime.visible := value;
-  lblCurrent.visible := value;
+  lblFile.visible := DetailedMode;
+  lblSpeed.visible := DetailedMode;
+  lblStatus.visible := DetailedMode;
+  lblElapsedTime.visible := DetailedMode;
+  lblRemainingTime.visible := DetailedMode;
 
-  valFile.visible := value;
-  valSpeed.visible := value;
-  valStatus.visible := value;
-  valElapsedTime.visible := value;
-  valRemainingTime.visible := value;
-  valCurrent.visible := value;
+  valFile.visible := DetailedMode;
+  valSpeed.visible := DetailedMode;
+  valStatus.visible := DetailedMode;
+  valElapsedTime.visible := DetailedMode;
+  valRemainingTime.visible := DetailedMode;
 
-  barTotal.visible := true;
+  if barCurrent.visible then begin
+    lblCurrent.top := barTotal.top + barTotal.height + 8;
+
+    valCurrent.Top := lblCurrent.top;
+    barCurrent.Top := lblCurrent.top + lblCurrent.height + vert_spacing;
+  end;
+
+  if SingleFileMode then begin
+    lblFile.top := barTotal.top + barTotal.height + vert_spacing * 3;
+  end else begin
+    lblFile.top := barCurrent.top + barCurrent.height + vert_spacing * 3;
+  end;
+  valFile.top := lblFile.top;
+
+  lblSpeed.top := lblFile.top + lblFile.height + vert_spacing;
+  valSpeed.top := lblSpeed.top;
+
+  lblStatus.top := valSpeed.top + valSpeed.height + vert_spacing;
+  valStatus.top := lblStatus.top;
+
+  lblelapsedtime.top := lblStatus.top + lblStatus.height + vert_spacing;
+  valelapsedtime.top := lblElapsedTime.top;
+
+  lblremainingtime.top := lblElapsedTime.top + lblElapsedTime.height + vert_spacing;
+  valRemainingTime.Top := lblRemainingTime.top;
 
   if DetailedMode then begin
-    btnDetails.Caption := fStrings[IS_HideDetails];
+    btnDetails.Caption := FStrings[IS_HideDetails];
     btnDetails.Top := lblRemainingTime.top + lblRemainingTime.height + 8;
 
-    lblTotalProgress.Caption := fStrings[IS_TotalProgress]; //WRONG
+    lblTotalProgress.Caption := FStrings[IS_TotalProgress]; //WRONG
   end else begin
-    btnDetails.Caption := fStrings[IS_ShowDetails];
+    btnDetails.Caption := FStrings[IS_ShowDetails];
     btnDetails.Top := barTotal.top + barTotal.height + 8;
 
     lblTotalProgress.Caption := valStatus.caption;
@@ -182,9 +208,23 @@ begin
   pnlContainer.height := btnDetails.Top + btnDetails.height + 8;
 end;
 
+procedure TUI.SetDetailsMode(const Value: boolean);
+begin
+  FDetailedMode := Value;
+
+  RearrangeUI;
+end;
+
 procedure tui.setfilename(const value: string);
 begin
   valfile.caption := value;
+end;
+
+procedure TUI.SetSingleFileMode(const Value: boolean);
+begin
+  FSingleFileMode := Value;
+
+  RearrangeUI;
 end;
 
 procedure tui.setstatus(const value: string);
@@ -197,8 +237,8 @@ end;
 constructor tui.create(parent: hwnd; strings: TITDStrings);
 begin
   liteui_init;
-  fparent := parent;
-  fstrings := strings;
+  FParent := parent;
+  FStrings := strings;
 
   pnlContainer := TLitePanel.create(parent);
   pnlContainer.ParentFont := false;
@@ -227,7 +267,6 @@ begin
 
   lblCurrent := TLiteLabel.create(parent);
   lblCurrent.caption := Strings[IS_CurrentFile];
-  lblCurrent.top := barTotal.top + barTotal.height + 8;
   pnlContainer.addchild(lblCurrent);
 
   valCurrent := TLiteLabel.create(parent);
@@ -235,69 +274,57 @@ begin
   valCurrent.align := laRight;
   valCurrent.AutoSize := false;
   valCurrent.caption := '';
-  valCurrent.Top := lblCurrent.top;
   valCurrent.left := box_width - valcurrent.width;
   pnlContainer.addchild(valCurrent);
 
   barCurrent := TLiteProgress.create(parent);
   barCurrent.width := box_width;
-  barCurrent.Top := lblCurrent.top + lblCurrent.height + vert_spacing;
   pnlContainer.addchild(barCurrent);
 
   lblFile := tlitelabel.create(parent);
   lblFile.autosize := true;
   lblFile.caption := Strings[IS_File];
-  lblFile.top := barCurrent.top + barCurrent.height + vert_spacing * 3;
   pnlContainer.addchild(lblFile);
 
   valFile := TLiteLabel.create(parent);
   valFile.caption := '';
   valFile.left := second_column;
-  valFile.top := lblFile.top;
   pnlContainer.addchild(valFile);
 
   lblSpeed := TLiteLabel.create(parent);
   lblSpeed.caption := Strings[IS_Speed];
-  lblSpeed.top := lblFile.top + lblFile.height + vert_spacing;
   pnlContainer.addchild(lblSpeed);
 
   valSpeed := TLiteLabel.create(parent);
   valSpeed.caption := '';
   valSpeed.left := second_column;
-  valSpeed.top := lblSpeed.top;
   pnlContainer.addchild(valSpeed);
 
   lblStatus := TLiteLabel.create(parent);
   lblStatus.caption := strings[IS_Status];
-  lblStatus.top := valSpeed.top + valSpeed.height + vert_spacing;
   pnlContainer.addchild(lblStatus);
 
   valStatus := TLiteLabel.create(parent);
   valStatus.caption := '';
   valStatus.left := second_column;
-  valStatus.top := lblStatus.top;
   pnlContainer.addchild(valstatus);
 
   lblelapsedtime := TLiteLabel.create(parent);
   lblelapsedtime.caption := Strings[IS_ElapsedTime];
-  lblelapsedtime.top := lblStatus.top + lblStatus.height + vert_spacing;
   pnlContainer.addchild(lblElapsedTime);
 
   valElapsedtime := TLiteLabel.create(parent);
   valElapsedTime.caption := '';
   valElapsedTime.left := second_column;
-  valelapsedtime.top := lblElapsedTime.top;
   pnlContainer.addchild(valElapsedTime);
 
   lblRemainingTime := TLiteLabel.create(parent);
   lblRemainingtime.caption := Strings[IS_RemainingTime];
-  lblremainingtime.top := lblElapsedTime.top + lblElapsedTime.height + vert_spacing;
   pnlContainer.addchild(lblRemainingTime);
 
   valRemainingtime := TLiteLabel.create(parent);
   valRemainingtime.caption := '';
   valremainingtime.left := second_column;
-  valRemainingTime.Top := lblRemainingTime.top;
   pnlContainer.addchild(valRemainingTime);
 
   btnDetails := TLiteButton.create(parent);
@@ -305,7 +332,8 @@ begin
   btnDetails.OnClick := DetailsClick;
   pnlContainer.addchild(btnDetails);
 
-  DetailedMode := false;
+  FDetailedMode := false;
+  FSingleFileMode := false;
 
   processmessages;
 end;
@@ -360,28 +388,28 @@ end;
 constructor TITDEngine.create;
 begin
   inherited;
-  fWE := TDownloadEngine.Create;
+  FWE := TDownloadEngine.Create;
 
-  fWE.TimeOut := 10000;
-  fWE.Agent := 'InnoTools_Downloader';
-  fWE.progress := DownloadProgress;
+  FWE.TimeOut := 10000;
+  FWE.Agent := 'InnoTools_Downloader';
+  FWE.progress := DownloadProgress;
 
-  fstrings := TITDStrings.create;
-  fFiles := TObjectList.Create;
-  fuis := tobjectlist.create;
-  options := tstringlist.create;
-  fcancel := false;
-  fdownloaddelay := 0;
-  fsmooth := false;
+  FStrings := TITDStrings.create;
+  FFiles := TObjectList.Create;
+  FUIs := tobjectlist.create;
+  FOptions := tstringlist.create;
+  FCancel := false;
+  FDownloadDelay := 0;
+  FSmooth := false;
 end;
 
 procedure TITDEngine.AddMirror(const url, filename: string);
 var i: integer;
 begin
-  for i := 0 to ffiles.Count - 1 do begin
+  for i := 0 to FFiles.Count - 1 do begin
 
-    if AnsiCompareText(TDlFile(ffiles[i]).filename, filename) = 0 then begin
-      TDlFile(ffiles[i]).addMirror(url);
+    if AnsiCompareText(TDlFile(FFiles[i]).filename, filename) = 0 then begin
+      TDlFile(FFiles[i]).addMirror(url);
     end;
   end;
 
@@ -390,72 +418,72 @@ end;
 function TITDEngine.calcTotalFilesSize: cardinal;
 var t1: integer;
 begin
-  fTotalSizeUnknown := false;
-  result := fTotalBytesWritten; //Since these are removed from ffiles list
-  for t1 := 0 to ffiles.count - 1 do begin
-    result := result + TDLFile(ffiles[t1]).size;
+  FTotalSizeUnknown := false;
+  result := FTotalBytesWritten; //Since these are removed from ffiles list
+  for t1 := 0 to FFiles.count - 1 do begin
+    result := result + TDLFile(FFiles[t1]).size;
 
     if TDLFile(files[t1]).size = 0 then
-      fTotalSizeUnknown := true;
+      FTotalSizeUnknown := true;
   end;
 end;
 
 
 destructor TITDEngine.destroy;
 begin
-  fwe.free;
-  fuis.free;
-  fFiles.free;
-  options.free;
-  fstrings.free;
+  FWE.free;
+  FUIs.free;
+  FFiles.free;
+  FOptions.free;
+  FStrings.free;
   inherited;
 end;
 
 function TITDEngine.UIByHandle(handle: hwnd): TUI;
 var t1: integer;
 begin
-  for t1 := 0 to fuis.count - 1 do
-    if tui(fuis[t1]).fparent = handle then begin
-      result := tui(fuis[t1]);
+  for t1 := 0 to FUIs.count - 1 do
+    if tui(FUIs[t1]).FParent = handle then begin
+      result := tui(FUIs[t1]);
       exit;
     end;
-  result := TUI.create(handle, fstrings);
-  fuis.Add(result);
+  result := TUI.create(handle, FStrings);
+  FUIs.Add(result);
 end;
 
 function TITDEngine.getUI: TUI;
 begin
-  result := fui;
+  result := FUI;
 end;
 
 function TITDEngine.PostPage(const url, data: string; out resultbuffer: string): boolean;
 begin
-  result := fWE.PostPage(url, data, resultbuffer);
+  result := FWE.PostPage(url, data, resultbuffer);
 end;
 
 procedure TITDEngine.setUI(value: TUI);
 begin
-  fui := value;
+  FUI := value;
 end;
 
 function TITDEngine.shouldcancel: Boolean;
 begin
-  result := terminated or fcancel;
+  result := terminated or FCancel;
 end;
 
 function TITDEngine.getfile(index: integer): TDLFile;
 begin
-  result := TDLFile(fFiles[index]);
+  result := TDLFile(FFiles[index]);
 end;
 
 procedure TITDEngine.Cancel;
 begin
-  fcancel := true;
+  FCancel := true;
 end;
 
 function TITDEngine.Count: integer;
 begin
-  result := fFiles.count;
+  result := FFiles.count;
 end;
 
 procedure TITDEngine.AddFile(const url, filename: string; size: integer = 0);
@@ -463,7 +491,7 @@ var f: TDLFile;
 begin
   f := TDLFile.Create(url, filename);
   f.size := size;
-  ffiles.Add(f);
+  FFiles.Add(f);
 end;
 
 function TITDEngine.GetOption(const option: string): string;
@@ -471,15 +499,15 @@ begin
   if AnsiCompareText(option, 'ITD_Version') = 0 then
     result := itdversion else
     if AnsiCompareText(option, 'Debug_DownloadDelay') = 0 then
-      result := inttostr(fdownloaddelay) else
+      result := inttostr(FDownloadDelay) else
       if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
         result := '0'; //Depreceated
       end else
         if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
-          if fsmooth then result := '1' else result := '0';
+          if FSmooth then result := '1' else result := '0';
         end else
           if AnsiCompareText(option, 'Debug_Messages') = 0 then begin
-            if fdebugmessages then result := '1' else result := '0'
+            if FDebugMessages then result := '1' else result := '0'
           end else
             result := '';
 end;
@@ -488,37 +516,37 @@ procedure TITDEngine.SetOption(const option, value: string);
 var t1: integer;
 begin
   if AnsiCompareText(option, 'Debug_DownloadDelay') = 0 then begin
-    fdownloaddelay := strtoint(value);
+    FDownloadDelay := strtoint(value);
   end else
     if AnsiCompareText(option, 'ITD_TimeOut') = 0 then begin
-      fWE.timeout := strtoint(value);
+      FWE.timeout := strtoint(value);
     end else
       if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
         // fwe.nocache := (value = '1'); Depreceated
       end else
         if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
-          fsmooth := value = '1';
-          for t1 := 0 to fuis.count - 1 do begin
-            tui(fuis[t1]).barCurrent.smooth := fsmooth;
-            tui(fuis[t1]).barTotal.smooth := fsmooth;
+          FSmooth := value = '1';
+          for t1 := 0 to FUIs.count - 1 do begin
+            tui(FUIs[t1]).barCurrent.smooth := FSmooth;
+            tui(FUIs[t1]).barTotal.smooth := FSmooth;
           end;
         end else
           if AnsiCompareText(option, 'Debug_Messages') = 0 then
-            fdebugmessages := (value = '1');
+            FDebugMessages := (value = '1');
 end;
 
 procedure TITDEngine.CreateUI(hosthwnd: hwnd);
 var ui: TUI;
 begin
   ui := TUI.create(hosthwnd, strings);
-  ui.barCurrent.Smooth := fsmooth;
-  ui.barTotal.Smooth := fsmooth;
-  fuis.Add(ui);
+  ui.barCurrent.Smooth := FSmooth;
+  ui.barTotal.Smooth := FSmooth;
+  FUIs.Add(ui);
 end;
 
 procedure TITDEngine.ClearFiles;
 begin
-  fFiles.Clear;
+  FFiles.Clear;
 end;
 
 function TITDEngine.DownloadFile(const url, filename: string): integer;
@@ -546,7 +574,7 @@ function TITDEngine.DownloadFiles(surface: hwnd): integer;
 begin
   try
     ui := UIByHandle(surface); //set the UI to be used
-    result := downloadlist(fFiles);
+    result := downloadlist(FFiles);
   except //don't allow our exceptions to percolate to the host process!
     on e: eerrorcode do
       Result := e.errcode;
@@ -575,9 +603,9 @@ var f: TDLFile;
   begin
     ui.barTotal.max := totalFileBytes;
 
-    ui.barTotal.Marquee := fTotalSizeUnknown;
+    ui.barTotal.Marquee := FTotalSizeUnknown;
 
-    if fTotalSizeUnknown then begin
+    if FTotalSizeUnknown then begin
       ui.valTotalProgress.caption := fileprogresstostr(TotalDownloaded, 0, true, strings);
     end else begin
       ui.valTotalProgress.caption := fileprogresstostr(TotalDownloaded, totalFileBytes, False, strings);
@@ -617,7 +645,7 @@ begin
   end;
 
    //Total downloaded is the total of completed files plus the progress on this file
-  totalDownloaded := fTotalBytesWritten + downBytes;
+  totalDownloaded := FTotalBytesWritten + downBytes;
 
    //Total bytes of files we are to download
   totalFileBytes := CalcTotalFilesSize;
@@ -630,37 +658,39 @@ begin
         updateTotalBar;
       end;
     dsStartingDownload: begin
-        ui.status := fStrings[IS_StartingDownload];
+        ui.status := FStrings[IS_StartingDownload];
         ui.filename := ExtractFileName(f.filename);
         ui.barcurrent.max := f.size;
 
         updateCurrentBar;
 
         ui.barCurrent.Marquee := true;
-        ui.lblTotalProgress.caption := Format(Strings[IS_DownloadingSimple], [extractfilename(f.filename)]);
+
+        if not ui.DetailedMode then
+         ui.lblTotalProgress.caption := Format(Strings[IS_DownloadingSimple], [extractfilename(f.filename)]);
 
         processmessages;
       end;
     dsDownloading: begin
 
-        if fdownloaddelay <> 0 then
-          sleep(fdownloaddelay);
+        if FDownloadDelay <> 0 then
+          sleep(FDownloadDelay);
 
-        if now < fLastProgress + 0.5 / SecsPerDay then
+        if now < FLastProgress + 0.5 / SecsPerDay then
           exit;
-        fLastProgress := now;
+        FLastProgress := now;
 
         if ui.DetailedMode then begin
           ui.lblTotalProgress.caption := Strings[IS_TotalProgress];
-          ui.status := fStrings[IS_Downloading];
+          ui.status := FStrings[IS_Downloading];
         end else
           ui.lblTotalProgress.caption := Format(Strings[IS_DownloadingSimple], [extractfilename(f.filename)]);
 
-        if now - fFileStartTime > 0 then
-          ui.valSpeed.caption := fileratetostr(round(downbytes / ((now - fFileStartTime) * secsperday)), strings);
-        ui.valElapsedTime.caption := shorttimetostr(now - fTotalStartTime, strings);
-        if not fTotalSizeUnknown then
-          ui.valRemainingTime.caption := shorttimetostr(max((totalFileBytes / TotalDownloaded) * (now - fTotalStartTime) - (now - fTotalStartTime), 0), strings) else
+        if now - FFileStartTime > 0 then
+          ui.valSpeed.caption := fileratetostr(round(downbytes / ((now - FFileStartTime) * secsperday)), strings);
+        ui.valElapsedTime.caption := shorttimetostr(now - FTotalStartTime, strings);
+        if not FTotalSizeUnknown then
+          ui.valRemainingTime.caption := shorttimetostr(max((totalFileBytes / TotalDownloaded) * (now - FTotalStartTime) - (now - FTotalStartTime), 0), strings) else
           ui.valRemainingTime.caption := Strings[IS_Unknown];
 
         updateCurrentBar;
@@ -679,33 +709,35 @@ var t1, i: integer;
   url: string;
   success: boolean;
 begin
-  fcancel := false;
+  FCancel := false;
 
   processmessages;
   if assigned(ui) then begin
-    ui.status := fStrings[IS_GettingFileInformation];
-    ui.lblCurrent.Visible := false;
-    ui.barCurrent.visible := false;
-    ui.valCurrent.Visible := false;
-    ui.barTotal.visible := true;
+    ui.status := FStrings[IS_GettingFileInformation];
     ui.barTotal.Marquee := true;
+    ui.barCurrent.Marquee := true;
+
     ui.valElapsedTime.Caption := '';
+    ui.valTotalProgress.caption := '';
+    ui.valCurrent.caption := '';
+    ui.barCurrent.Position := 0;
+
+    ui.SingleFileMode := files.Count <= 1;
   end;
-  processmessages;
 
   try
     if assigned(ui) then begin
       for t1 := 0 to files.count - 1 do begin
-        if fdownloadDelay > 0 then begin
+        if FDownloadDelay > 0 then begin
       { If we want a download delay, simulate a delay in connecting to the server
         to get file size}
-          for i := 1 to 3 do begin
+          for i := 1 to 8 do begin
             processmessages;
             sleep(100);
           end;
         end;
         if TDLFile(files[t1]).size = 0 then
-          TDLFile(files[t1]).querysize(fWE);
+          TDLFile(files[t1]).querysize(FWE);
 
         processmessages;
         if ShouldCancel then
@@ -713,19 +745,19 @@ begin
       end;
     end;
 
-    fTotalStartTime := now;
-    fTotalBytesWritten := 0;
+    FTotalStartTime := now;
+    FTotalBytesWritten := 0;
 
     while files.Count > 0 do begin //Loop over all files to be downloaded
       f := tdlfile(files[0]);
 
-      fFileStartTime := now;
+      FFileStartTime := now;
 
       filestream := TFileStream.Create(f.filename, fmCreate or fmShareDenyNone);
       try
         success := false;
         for url in f.urls do begin
-          if fWE.DownloadWebFileToStream(url, filestream, f) then begin
+          if FWE.DownloadWebFileToStream(url, filestream, f) then begin
             success := true;
             break;
           end;
@@ -735,13 +767,13 @@ begin
             raise EErrorCode.create(ITDERR_USERCANCEL);
           end;
 
-          if fdebugmessages then begin
-            showmessage('Error: ' + fwe.LastError);
+          if FDebugMessages then begin
+            showmessage('Error: ' + FWE.LastError);
           end;
           raise EErrorcode.create(ITDERR_ERROR);
         end;
 
-        fTotalBytesWritten := fTotalBytesWritten + filestream.Size;
+        FTotalBytesWritten := FTotalBytesWritten + filestream.Size;
       finally
         filestream.free;
       end;
@@ -750,7 +782,7 @@ begin
 
     result := ITDERR_SUCCESS; //done without incident!
     if assigned(ui) then begin
-      ui.status := fStrings[IS_DownloadComplete];
+      ui.status := FStrings[IS_DownloadComplete];
       ui.filename := '';
 
       ui.valSpeed.caption := '';
@@ -760,7 +792,7 @@ begin
   except
     //Download failed!
     if assigned(ui) then begin
-      ui.status := fStrings[IS_DownloadFailed];
+      ui.status := FStrings[IS_DownloadFailed];
       ui.filename := '';
       ui.valCurrent.caption := '';
       ui.valSpeed.caption := '';
@@ -770,10 +802,6 @@ begin
       ui.barTotal.Marquee := false;
 
       ui.barCurrent.Position := 0;
-
-      ui.barCurrent.Visible := false;
-      ui.lblCurrent.visible := false;
-      ui.valCurrent.Visible := false;
 
       ui.valTotalProgress.visible := false;
     end;
@@ -907,7 +935,7 @@ end;
 
 function itd_getfilesize(url: pchar; var size: cardinal): boolean; stdcall;
 begin
-  result := engine.fWE.GetWebFileSize(url, size);
+  result := engine.FWE.GetWebFileSize(url, size);
 end;
 
 function itd_getresultlen: integer; stdcall;
