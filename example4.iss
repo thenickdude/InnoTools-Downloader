@@ -22,6 +22,7 @@ ShowLanguageDialog=yes
 Name: en; MessagesFile: compiler:Default.isl
 Name: fr; MessagesFile: compiler:Languages\French.isl
 Name: nl; MessagesFile: compiler:Languages\Dutch.isl
+Name: ptbr; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
 
 #define ITDRoot ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')
 

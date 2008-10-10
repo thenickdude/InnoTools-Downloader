@@ -5,7 +5,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
 (*
  Inno Tools Downloader DLL
  Copyright (C) Sherlock Software 2008
- Version 0.3.3
+ Version 0.3.4
 
  Contact:
   The author, Nicholas Sherlock, at nick@sherlocksoftware.org.
@@ -15,6 +15,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
   http://www.sherlocksoftware.org/
 
  History:
+  0.3.4 - Added Brazilian Portuguese translation by Ronaldo Souza
   0.3.3 - The "Hilbrand Edskes" release :), lots of suggestions and corrections from him, thank you!
           The "Retry" button is now translated.
           The "Current file" progress bar is hidden if only one file is being downloaded.

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "InnoTools Downloader"
-#define MyAppVerName "InnoTools Downloader 0.3.3"
+#define MyAppVerName "InnoTools Downloader 0.3.4"
 #define MyAppPublisher "Sherlock Software"
 #define MyAppURL "http://www.sherlocksoftware.org"
 #define MyAppUrlName "Sherlock Software.url"
