@@ -530,9 +530,11 @@ begin
             tui(FUIs[t1]).barCurrent.smooth := FSmooth;
             tui(FUIs[t1]).barTotal.smooth := FSmooth;
           end;
-        end else
-          if AnsiCompareText(option, 'Debug_Messages') = 0 then
-            FDebugMessages := (value = '1');
+        end else if AnsiCompareText(option, 'UI_DetailedMode') = 0 then begin
+          if assigned(FUI) then
+            FUI.DetailedMode := value = '1';
+        end else if AnsiCompareText(option, 'Debug_Messages') = 0 then
+          FDebugMessages := (value = '1');
 end;
 
 procedure TITDEngine.CreateUI(hosthwnd: hwnd);
@@ -667,7 +669,7 @@ begin
         ui.barCurrent.Marquee := true;
 
         if not ui.DetailedMode then
-         ui.lblTotalProgress.caption := Format(Strings[IS_DownloadingSimple], [extractfilename(f.filename)]);
+          ui.lblTotalProgress.caption := Format(Strings[IS_DownloadingSimple], [extractfilename(f.filename)]);
 
         processmessages;
       end;

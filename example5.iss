@@ -25,6 +25,15 @@ Name: english; MessagesFile: compiler:Default.isl
 #include ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Tray','ScriptPath','');
 
 [Code]
+{
+	Example 5
+
+	This example demonstrates how to integrate InnoTools Downloader with
+	InnoTools Tray to have setup minimize to the tray while downloading.
+
+	You must have InnoTools Tray installed to compile this example.
+}
+
 procedure MyITDEventHandler(event:integer);
 begin
  {Extend ITD's default handling of events to include
@@ -58,7 +67,7 @@ end;
 procedure InitializeWizard();
 begin
  itd_init;
- itt_init;
+ itt_init; //Important! Create (but don't display yet) the tray icon
 
  itd_EventHandler:=@MyITDEventHandler;
 

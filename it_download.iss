@@ -15,6 +15,9 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
   http://www.sherlocksoftware.org/
 
  History:
+  0.3.5 - Moved strings used in the updater example to the language file, so that they
+          may be more easily translated.
+		  Added event functions to support the example of integration with InnoTools tray.
   0.3.4 - Added Brazilian Portuguese translation by Ronaldo Souza
   0.3.3 - The "Hilbrand Edskes" release :), lots of suggestions and corrections from him, thank you!
           The "Retry" button is now translated.
@@ -111,6 +114,17 @@ const
   ITDS_MessageFailRetry=251;
 
   ITDS_Retry=502;
+
+  {Constants for language strings of updater example}
+  ITDS_Update_Caption=600;
+  ITDS_Update_Description=601;
+  ITDS_Update_Checking=602;
+  ITDS_Update_NewAvailable=603;
+  ITDS_Update_NoNewAvailable=604;
+  ITDS_Update_WantToCheck=605;
+  ITDS_Update_Failed=606;
+  ITDS_Update_WillLaunch=607;
+  ITDS_Update_WillLaunchWithPath=608;
 
   ITD_Event_DownloadPageEntered=1;
   ITD_Event_DownloadPageLeft=2;

@@ -1,5 +1,5 @@
 #define MyAppName "My Program"
-#define MyAppVerName "My Program 2.0"
+#define MyAppVerName "My Program 1.0"
 #define MyAppPublisher "My Company, Inc."
 #define MyAppURL "http://www.mycompany.com"
 
@@ -44,19 +44,22 @@ var
 
 procedure DownloadFinished(downloadPage:TWizardPage);
 var ErrorCode:integer;
+ (* text:string; *)
 begin
  (*
- Tell the user about the new installer. The message is pretty ugly if
- NewInstallerPath is left at the default (The {tmp} directory)
- 
- MsgBox('The new version''s installer has been saved to "'+NewInstallerPath
-     +'". The new installer will now be launched.', mbInformation, MB_OK);
- *)
- 
- MsgBox('The new installer has been downloaded. It will now be launched.',
-      mbInformation, MB_OK);
+	 Tell the user about the new installer. The message is pretty ugly if
+	 NewInstallerPath is left at the default (The {tmp} directory)
 
- if ShellExec('open',NewInstallerPath, '/updated',
+	 text:=ITD_GetString(ITDS_Update_WillLaunchWithPath);
+
+	 StringChangeEx(text, '%1', NewInstallerPath, true);
+
+	 MsgBox(text, mbInformation, MB_OK);
+ *)
+
+ MsgBox(ITD_GetString(ITDS_Update_WillLaunch), mbInformation, MB_OK);
+
+ if ShellExec('open', NewInstallerPath, '/updated',
    ExtractFilePath(NewInstallerPath), SW_SHOW, ewNoWait, ErrorCode) then
    ExitProcess(1);
 end;
@@ -108,17 +111,18 @@ var
   downloadPage:TWizardpage;
 begin
  itd_init;
- 
+
  //Where the new installer should be saved to, can be anywhere.
  NewInstallerPath:=ExpandConstant('{tmp}\NewInstaller.exe');
 
  {Create our own progress page for the initial download of a small
   textfile from the server which says what the latest version is}
- progress:=CreateOutputProgressPage('Update', 'Checking for new program');
+ progress:=CreateOutputProgressPage(ITD_GetString(ITDS_Update_Caption),
+    ITD_GetString(ITDS_Update_Description));
 
  //Create the ITD GUI so that we have it if we decide to download a new intaller version
  downloadPage:=itd_downloadafter(wpWelcome);
- 
+
  {If the download succeeds, we will need to launch the new installer. The
  callback is called if the download is successful.}
  itd_afterSuccess:=@downloadfinished;
@@ -135,6 +139,7 @@ var
  i:integer;
  ourVersion:string;
  checkedSuccessfully:boolean;
+ text:string;
 begin
  result:=true;
  if curPageID=wpWelcome then begin
@@ -145,26 +150,26 @@ begin
      exit;
     end;
    end;
-   
+
    //Offer to check for a new version for the user..
-   if MsgBox('Would you like to check to see if a newer version of this program is available? (Requires an internet connection)', mbConfirmation, MB_YESNO) = IDYES then
+   if MsgBox(ITD_GetString(ITDS_Update_WantToCheck), mbConfirmation, MB_YESNO) = IDYES then
     begin
       wizardform.show;
       progress.Show;
-      progress.SetText('Checking for newer installer...','');
+      progress.SetText(ITD_GetString(ITDS_Update_Checking),'');
       progress.SetProgress(2,10);
       try
         newavail:=false;
 
         checkedSuccessfully:=false;
         GetVersionNumbersString(expandconstant('{srcexe}'), ourVersion);
-        
+
         if itd_downloadfile('http://www.sherlocksoftware.org/innotools/latestver.txt',expandconstant('{tmp}\latestver.txt'))=ITDERR_SUCCESS then begin
           { Now read the version from that file and see if it is newer.
             The file has a really simple format:
 
             2.0,"http://www.sherlocksoftware.org/innotools/example3%202.0.exe"
-            
+
             The installer version, a comma, and the URL where the new version can be downloaded.
           }
           list:=TStringList.create;
@@ -180,11 +185,16 @@ begin
                 checkedSuccessfully:=true;
                 if CompareVersions(trim(line[0]), trim(ourVersion))>0 then begin
                   //Version is newer
-                    if MsgBox('There is a newer installer available (New version is '+line[0]+', current version is '+ourVersion+'). Would you like to download it?', mbConfirmation, MB_YESNO)=IDYES then begin
+                    text:=ITD_GetString(ITDS_Update_NewAvailable);
+
+                    StringChangeEx(text, '%1', ourVersion, true); //"Current version" part of the string
+                    StringChangeEx(text, '%2', line[0], true); //"New version" part of the string
+
+                    if MsgBox(text, mbConfirmation, MB_YESNO)=IDYES then begin
                       itd_addFile(trim(line[1]), NewInstallerPath);
                     end;
                 end else begin
-                  MsgBox('This installer is up to date.', mbInformation, MB_OK);
+                  MsgBox(ITD_GetString(ITDS_Update_NoNewAvailable), mbInformation, MB_OK);
                 end;
                 end;
               finally
@@ -195,11 +205,11 @@ begin
             list.free;
           end;
         end;
-        
+
         if not checkedSuccessfully then begin
-          MsgBox('I was unable to check for an update, I will continue '+
-            'with the installation of the current version, '+ourVersion,
-            mbInformation, MB_OK);
+          text:=ITD_GetString(ITDS_Update_Failed);
+		  StringChangeEx(text, '%1', ourVersion, true);
+          MsgBox(text, mbInformation, MB_OK);
         end;
       finally
         progress.Hide;
@@ -207,5 +217,3 @@ begin
     end;
   end;
  end;
-
-

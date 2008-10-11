@@ -61,8 +61,20 @@ const
   IS_HideDetails = 501;
   IS_Retry = 502;
 
+  //Updater example strings
+
+  IS_Update_Caption = 600;
+  IS_Update_Description = 601;
+  IS_Update_Checking = 602;
+  IS_Update_NewAvailable = 603;
+  IS_Update_NoNewAvailable = 604;
+  IS_Update_WantToCheck = 605;
+  IS_Update_Failed = 606;
+  IS_Update_WillLaunch = 607;
+  IS_Update_WillLaunchWithPath = 608;
+
 const
-  DefaultStrings: array[0..36] of TDefaultString = (
+  DefaultStrings: array[0..45] of TDefaultString = (
     (id: IS_GettingFileInformation; text: 'Getting file information...'),
     (id: IS_StartingDownload; text: 'Starting download...'),
     (id: IS_Downloading; text: 'Downloading...'),
@@ -108,7 +120,19 @@ const
 
     (id: IS_ShowDetails; text: 'Details'),
     (id: IS_HideDetails; text: 'Hide'),
-    (id: IS_Retry; text: 'Retry')
+    (id: IS_Retry; text: 'Retry'),
+
+    //Updater example strings
+    (id: IS_Update_Caption; text: 'Update setup'),
+    (id: IS_Update_Description; text: 'Checking for updates...'),
+    (id: IS_Update_Checking; text: 'Checking for updates...'),
+    (id: IS_Update_NewAvailable; text: 'There is a newer installer available. The new version is %2, the current version is %1. Would you like to download it?'),
+    (id: IS_Update_NoNewAvailable; text: 'This installer is up to date.'),
+    (id: IS_Update_WantToCheck; text: 'Would you like setup to check if a newer version of this program is available? (Requires an internet connection)'),
+    (id: IS_Update_Failed; text: 'I was unable to check for an update, I will continue ' +
+      'with the installation of the current version, %1.'),
+    (id: IS_Update_WillLaunch; text: 'The new installer has been downloaded. It will now be launched.'),
+    (id: IS_Update_WillLaunchWithPath; text: 'The new installer has been saved to "%1". It will now be launched.')
     );
 
 

@@ -37,6 +37,7 @@ Source: example2.iss; DestDir: {app}\examples
 Source: example3 1.0.iss; DestDir: {app}\examples
 Source: example3 2.0.iss; DestDir: {app}\examples
 Source: example4.iss; DestDir: {app}\examples
+Source: example5.iss; DestDir: {app}\examples
 Source: ITDHelp.chm; DestDir: {app}
 Source: source\*.pas; DestDir: {app}\Source
 Source: source\*.dpr; DestDir: {app}\Source
