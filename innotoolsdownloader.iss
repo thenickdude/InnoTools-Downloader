@@ -21,7 +21,7 @@ Compression=lzma
 SolidCompression=true
 OutputDir=.
 SetupLogging=false
-LicenseFile=Licence.txt
+LicenseFile=License.txt
 AllowNoIcons=yes
 
 
@@ -29,7 +29,7 @@ AllowNoIcons=yes
 Name: english; MessagesFile: compiler:Default.isl
 
 [Files]
-Source: licence.txt; DestDir: {app};
+Source: license.txt; DestDir: {app}
 Source: itdownload.dll; DestDir: {app}; Flags: ignoreversion
 Source: it_download.iss; DestDir: {app}
 Source: example1.iss; DestDir: {app}\examples

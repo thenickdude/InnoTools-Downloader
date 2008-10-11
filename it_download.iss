@@ -112,11 +112,16 @@ const
 
   ITDS_Retry=502;
 
+  ITD_Event_DownloadPageEntered=1;
+  ITD_Event_DownloadPageLeft=2;
+  ITD_Event_DownloadFailed=3;
+
 var
   itd_allowcontinue: boolean;
   itd_retryonback: boolean;
 
   ITD_AfterSuccess:procedure(downloadPage:TWizardPage);
+  ITD_EventHandler:procedure(event:integer);
 
 procedure ITD_DownloadFiles();
 begin
@@ -194,6 +199,9 @@ begin
 
       wizardform.nextbutton.enabled := itd_allowcontinue;
 
+      if ITD_EventHandler<>nil then
+        ITD_EventHandler(ITD_Event_DownloadFailed);
+
       if itd_allowcontinue then begin //Download failed, we can retry, continue, or exit
         sender.caption:=ITD_GetString(ITDS_DownloadFailed);
         sender.description:=ITD_GetString(ITDS_MessageFailRetryContinue);
@@ -214,6 +222,9 @@ begin
   wizardform.nextbutton.enabled := false;
   wizardform.backbutton.hide();
 
+  if ITD_EventHandler<>nil then
+    ITD_EventHandler(ITD_Event_DownloadPageEntered);
+
   itd_nowdodownload(sender);
 end;
 
@@ -225,6 +236,14 @@ begin
     wizardform.backbutton.hide();
     itd_nowdodownload(sender);
   end;
+end;
+
+function ITD_HandleNextClick(sender: TWizardpage): boolean;
+begin
+  if ITD_EventHandler<>nil then
+    ITD_EventHandler(ITD_Event_DownloadPageLeft);
+
+  result:=true;
 end;
 
 procedure ITD_Init;
@@ -250,6 +269,7 @@ begin
   itd_downloadpage.onactivate := @itd_handleshowpage;
   itd_downloadpage.onshouldskippage := @itd_handleskippage;
   itd_downloadpage.onbackbuttonclick := @itd_handlebackclick;
+  itd_downloadpage.onnextbuttonclick := @itd_handlenextclick;
 
   itd_internal_initui(itd_downloadpage.surface.handle);
 
