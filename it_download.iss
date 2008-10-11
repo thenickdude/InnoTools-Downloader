@@ -5,7 +5,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
 (*
  Inno Tools Downloader DLL
  Copyright (C) Sherlock Software 2008
- Version 0.3.4
+ Version 0.3.5
 
  Contact:
   The author, Nicholas Sherlock, at nick@sherlocksoftware.org.

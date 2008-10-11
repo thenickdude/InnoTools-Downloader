@@ -73,7 +73,7 @@ begin
 
  //Let's download two zipfiles from my website..
  itd_addfile('http://www.sherlocksoftware.org/petz/files/dogz5.zip',expandconstant('{tmp}\dogz5.zip'));
- itd_addfile('http://www.sherlocksoftware.org/petz/files/petz4g.zip',expandconstant('{tmp}\petz4.zip'));
+ itd_addfile('http://www.sherlocksoftware.org/petz/files/petz4.zip',expandconstant('{tmp}\petz4.zip'));
 
  //Start the download after the "Ready to install" screen is shown
  itd_downloadafter(wpReady);
