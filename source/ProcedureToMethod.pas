@@ -4,6 +4,9 @@ interface
 
 uses windows;
 
+{Create stubs that present a Delphi method as if it were a Delphi
+ non-object procedure}
+
 procedure DisposeStub(Stub: Pointer);
 function CreateStub(ObjectPtr: Pointer; MethodPtr: Pointer): Pointer;
 

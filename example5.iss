@@ -53,8 +53,16 @@ begin
   end;
 
   ITD_Event_DownloadPageLeft:begin
-    ITT_RestoreFromTray;
 	ITT_SetMinimizesToTray(false);
+
+	if ITT_IsInTray then begin
+
+		{ITT_ShowBalloon('Setup has finished downloading files',
+		   'Click here to continue installation',10);}
+
+		ITT_RestoreFromTray;
+
+	end;
   end;
 
   ITD_Event_DownloadFailed:begin
@@ -69,11 +77,22 @@ begin
  itd_init;
  itt_init; //Important! Create (but don't display yet) the tray icon
 
+ itt_sethint('Downloading files...');
+
  itd_EventHandler:=@MyITDEventHandler;
 
  //Let's download two zipfiles from my website..
  itd_addfile('http://www.sherlocksoftware.org/petz/files/dogz5.zip',expandconstant('{tmp}\dogz5.zip'));
  itd_addfile('http://www.sherlocksoftware.org/petz/files/petz4.zip',expandconstant('{tmp}\petz4.zip'));
+
+ {While we're at it, let's change the default appearance
+  from the "simple mode" to the "detailed mode" that appears
+  when you click the "Details" button}
+ itd_setoption('UI_DetailedMode', '1');
+
+ {And let's change the agent string that is used to identify
+  the "browser" that is making HTTP requests}
+ itd_setoption('ITD_Agent', 'They cut the hard line, it''s a trap. Get out!');
 
  //Start the download after the "Ready to install" screen is shown
  itd_downloadafter(wpReady);

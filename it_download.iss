@@ -21,6 +21,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
           Fixes bugs that could cause the download to hang until
           some mouse movements were received.
           Allows "detailed mode" to be turned on with ITD_SetOption
+          Allows the HTTP agent to be set with ITD_SetOption
   0.3.4 - Added Brazilian Portuguese translation by Ronaldo Souza
   0.3.3 - The "Hilbrand Edskes" release :), lots of suggestions and corrections from him, thank you!
           The "Retry" button is now translated.

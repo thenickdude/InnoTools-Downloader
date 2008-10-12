@@ -32,9 +32,11 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="downloadengine.pas" />
+    <DCCReference Include="finalcatch.pas" />
     <DCCReference Include="formatting.pas" />
     <DCCReference Include="itdengine.pas" />
     <DCCReference Include="itdstrings.pas" />
     <DCCReference Include="liteui.pas" />
+    <DCCReference Include="ProcedureToMethod.pas" />
   </ItemGroup>
 </Project>

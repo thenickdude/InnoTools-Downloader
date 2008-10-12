@@ -116,6 +116,7 @@ type
       tag: TObject): boolean;
     function DownloadFTPFileToStream(const url: string; stream: TStream;
       tag: TObject): boolean;
+    procedure SetOptions(http: THTTPSend);
   public
 
     constructor Create;
@@ -206,8 +207,7 @@ begin
 end;
 
 //Set up the proxy information from IE settings
-
-procedure SetProxy(http: THTTPSend);
+procedure SetProxy(http:THTTPSend);
 var
   buffer: array[0..4095] of byte;
   info: TInternetProxyInfo absolute buffer;
@@ -252,6 +252,12 @@ begin
   end {else if GetLastError=ERROR_INSUFFICIENT_BUFFER then
    showmessage('Not enough buf');}
 
+end;
+
+procedure TDownloadEngine.SetOptions(http: THTTPSend);
+begin
+  http.UserAgent:=fagent;
+  SetProxy(http);
 end;
 
 function GetLocationHeader(headers: TStringList): string;
@@ -331,7 +337,7 @@ var thread: TPostThread;
 begin
   fhttp := THTTPSend.Create;
   try
-    SetProxy(FHTTP);
+    SetOptions(FHTTP);
     fhttp.Sock.OnStatus := HTTPSocketProgress;
     fHttp.TimeOut := fTimeOut;
 
@@ -446,7 +452,7 @@ var thread: TGetThread;
 begin
   fhttp := THTTPSend.Create;
   try
-    SetProxy(FHTTP);
+    SetOptions(FHTTP);
     fhttp.Sock.OnStatus := HTTPSocketProgress;
     fHttp.TimeOut := fTimeOut;
 
@@ -517,7 +523,7 @@ var thread: THeadThread;
 begin
   fhttp := THTTPSend.Create;
   try
-    SetProxy(FHTTP);
+    SetOptions(FHTTP);
     fhttp.Timeout := fTimeOut;
     thread := THeadThread.Create(url, fhttp, GetCurrentThreadId);
     thread.Resume;

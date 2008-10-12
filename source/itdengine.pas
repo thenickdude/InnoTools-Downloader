@@ -62,6 +62,7 @@ type
 
     lblFile, lblSpeed, lblStatus, lblElapsedTime, lblRemainingTime, lblCurrent,
       valFile, valSpeed, valStatus, valElapsedTime, valRemainingTime, valCurrent: tlitelabel;
+    FSmoothBars: boolean;
 
     procedure DetailsClick(sender: TObject);
     procedure SetStatus(const value: string);
@@ -69,7 +70,9 @@ type
     procedure SetDetailsMode(const Value: boolean);
     procedure RearrangeUI;
     procedure SetSingleFileMode(const Value: boolean);
+    procedure SetSmoothBars(const Value: boolean);
   public
+    property SmoothBars: boolean read FSmoothBars write SetSmoothBars;
     property DetailedMode: boolean read FDetailedMode write SetDetailsMode;
     property SingleFileMode: boolean read FSingleFileMode write SetSingleFileMode;
     property Status: string write setstatus;
@@ -93,7 +96,10 @@ type
 
     FDownloadDelay: integer;
     FCancel: boolean;
-    FSmooth, FDebugMessages: boolean;
+
+    //Defaults for newly-created UIs
+    FDefaultSmooth, FDefaultDetailedMode: boolean;
+    FDebugMessages: boolean;
 
     FOptions: tstringlist;
     FUIs: TObjectList;
@@ -120,7 +126,7 @@ type
     function PostPage(const url, data: string; out resultbuffer: string): boolean;
 
     procedure Cancel;
-    procedure CreateUI(hosthwnd: hwnd);
+    function CreateUI(hosthwnd: hwnd): TUI;
     procedure AddFile(const url, filename: string; size: integer = 0);
     procedure AddMirror(const url, filename: string);
     procedure ClearFiles;
@@ -227,6 +233,14 @@ begin
   RearrangeUI;
 end;
 
+procedure TUI.SetSmoothBars(const Value: boolean);
+begin
+  FSmoothBars := Value;
+
+  barCurrent.Smooth := value;
+  barTotal.Smooth := value;
+end;
+
 procedure tui.setstatus(const value: string);
 begin
   valstatus.caption := value;
@@ -239,6 +253,9 @@ begin
   liteui_init;
   FParent := parent;
   FStrings := strings;
+
+  FSmoothBars := true;
+  FDetailedMode := False;
 
   pnlContainer := TLitePanel.create(parent);
   pnlContainer.ParentFont := false;
@@ -400,7 +417,9 @@ begin
   FOptions := tstringlist.create;
   FCancel := false;
   FDownloadDelay := 0;
-  FSmooth := false;
+
+  FDefaultSmooth := false;
+  FDefaultDetailedMode := false;
 end;
 
 procedure TITDEngine.AddMirror(const url, filename: string);
@@ -447,8 +466,7 @@ begin
       result := tui(FUIs[t1]);
       exit;
     end;
-  result := TUI.create(handle, FStrings);
-  FUIs.Add(result);
+  result := CreateUI(handle);
 end;
 
 function TITDEngine.getUI: TUI;
@@ -502,8 +520,12 @@ begin
     result := inttostr(FDownloadDelay)
   else if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
     result := '0'; //Depreceated
+  end else if AnsiCompareText(option, 'ITD_Agent') = 0 then begin
+    result := FWE.Agent;
   end else if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
-    if FSmooth then result := '1' else result := '0';
+    if FDefaultSmooth then result := '1' else result := '0';
+  end else if AnsiCompareText(option, 'UI_DetailedMode') = 0 then begin
+    if FDefaultDetailedMode then result := '1' else result := '0';
   end else if AnsiCompareText(option, 'Debug_Messages') = 0 then begin
     if FDebugMessages then result := '1' else result := '0'
   end else
@@ -519,26 +541,31 @@ begin
     FWE.timeout := strtoint(value);
   end else if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
         // fwe.nocache := (value = '1'); Depreceated
+  end else if AnsiCompareText(option, 'ITD_Agent') = 0 then begin
+    FWE.Agent := value;
   end else if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
-    FSmooth := value = '1';
+    FDefaultSmooth := value = '1';
     for t1 := 0 to FUIs.count - 1 do begin
-      tui(FUIs[t1]).barCurrent.smooth := FSmooth;
-      tui(FUIs[t1]).barTotal.smooth := FSmooth;
+      tui(FUIs[t1]).barCurrent.smooth := FDefaultSmooth;
+      tui(FUIs[t1]).barTotal.smooth := FDefaultSmooth;
     end;
   end else if AnsiCompareText(option, 'UI_DetailedMode') = 0 then begin
-    if assigned(FUI) then
-      FUI.DetailedMode := value = '1';
+    FDefaultDetailedMode := value = '1';
+    for t1 := 0 to FUIs.count - 1 do begin
+      tui(FUIs[t1]).DetailedMode := FDefaultDetailedMode;
+    end;
   end else if AnsiCompareText(option, 'Debug_Messages') = 0 then
     FDebugMessages := (value = '1');
 end;
 
-procedure TITDEngine.CreateUI(hosthwnd: hwnd);
-var ui: TUI;
+function TITDEngine.CreateUI(hosthwnd: hwnd): TUI;
 begin
-  ui := TUI.create(hosthwnd, strings);
-  ui.barCurrent.Smooth := FSmooth;
-  ui.barTotal.Smooth := FSmooth;
-  FUIs.Add(ui);
+  result := TUI.create(hosthwnd, strings);
+
+  result.SmoothBars := FDefaultSmooth;
+  result.DetailedMode := FDefaultDetailedMode;
+
+  FUIs.Add(result);
 end;
 
 procedure TITDEngine.ClearFiles;
