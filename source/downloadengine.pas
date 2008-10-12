@@ -19,35 +19,38 @@ type
 
   TInetErrorEvent = procedure(code: cardinal; message: string) of object;
 
-  TFTPGetThread = class(TThread)
-  private
-    foperationdone, foperationsuccess: boolean;
-    furl: string;
-    fFtp: TFTPSend;
+  TRequestThread = class(TThread)
   protected
-    procedure Abort;
-    constructor create(const url: string; ftp: TFTPSend);
-    procedure Execute; override;
+    FOperationdone, FOperationSuccess: boolean;
+    FCallerThreadID: DWORD;
+  public
+    constructor Create(callerThreadID: DWORD);
 
-    property OperationDone: boolean read foperationdone;
-    property OperationSuccess: boolean read foperationsuccess;
+    property OperationDone: boolean read FOperationdone;
+    property OperationSuccess: boolean read FOperationSuccess;
   end;
 
-  TGetThread = class(TThread)
+  TFTPGetThread = class(TRequestThread)
   private
-    foperationdone, foperationsuccess: boolean;
+    FUrl: string;
+    FFtp: TFTPSend;
+  protected
+    procedure Abort;
+    constructor create(const url: string; ftp: TFTPSend; callerThreadID: DWORD);
+    procedure Execute; override;
+  end;
+
+  TGetThread = class(TRequestThread)
+  private
     furl: string;
     fhttp: THTTPSend;
   protected
     procedure Abort;
-    constructor create(const url: string; http: THTTPSend);
+    constructor create(const url: string; http: THTTPSend; callerThreadID: DWORD);
     procedure Execute; override;
-
-    property OperationDone: boolean read foperationdone;
-    property OperationSuccess: boolean read foperationsuccess;
   end;
 
-  TFTPSizeThread = class(TThread)
+  TFTPSizeThread = class(TRequestThread)
   private
     foperationdone, foperationsuccess: boolean;
     fsize: integer;
@@ -55,7 +58,7 @@ type
     fFtp: TFTPSend;
   protected
     procedure Abort;
-    constructor create(const url: string; ftp: TFTPSend);
+    constructor create(const url: string; ftp: TFTPSend; callerThreadID: DWORD);
     procedure Execute; override;
 
     property Size: integer read fsize;
@@ -63,34 +66,27 @@ type
     property OperationSuccess: boolean read foperationsuccess;
   end;
 
-  THeadThread = class(TThread)
+  THeadThread = class(TRequestThread)
   private
-    foperationdone, foperationsuccess: boolean;
     fsize: integer;
     furl: string;
     fhttp: THTTPSend;
   protected
     procedure Abort;
-    constructor create(const url: string; http: THTTPSend);
+    constructor create(const url: string; http: THTTPSend; callerThreadID: DWORD);
     procedure Execute; override;
 
     property Size: integer read fsize;
-    property OperationDone: boolean read foperationdone;
-    property OperationSuccess: boolean read foperationsuccess;
   end;
 
-  TPostThread = class(TThread)
+  TPostThread = class(TRequestThread)
   private
-    foperationdone, foperationsuccess: boolean;
     furl, fData: string;
     fhttp: THTTPSend;
   protected
     procedure Abort;
-    constructor create(const url, data: string; http: THTTPSend);
+    constructor create(const url, data: string; http: THTTPSend; callerThreadID: DWORD);
     procedure Execute; override;
-
-    property OperationDone: boolean read foperationdone;
-    property OperationSuccess: boolean read foperationsuccess;
   end;
 
   TDownloadEngine = class
@@ -219,6 +215,7 @@ var
   host: string;
   list: TStringList;
 begin
+
  { InternetQueryOption fails with ERROR_INSUFFICIENT_BUFFER if the buffer is
    SizeOf(TInternetProxyInfo) bytes, had to make it big to have it work. MSDN
    shows the same thing in their example code. Weird.}
@@ -340,7 +337,7 @@ begin
 
     fDownloadFileWritten := 0;
 
-    thread := TPostThread.Create(url, data, fhttp);
+    thread := TPostThread.Create(url, data, fhttp, GetCurrentThreadId);
     try
       thread.Resume;
       while not thread.operationDone do begin
@@ -416,7 +413,7 @@ begin
   fDownloadFileWritten := 0;
   fDownloadTag := tag;
 
-  thread := TFTPGetThread.Create(url, fFtp);
+  thread := TFTPGetThread.Create(url, fFtp, GetCurrentThreadId);
   try
     thread.Resume;
     while not thread.operationDone do begin
@@ -459,7 +456,7 @@ begin
     fDownloadFileWritten := 0;
     fDownloadTag := tag;
 
-    thread := TGetThread.Create(url, fhttp);
+    thread := TGetThread.Create(url, fhttp, GetCurrentThreadId);
     try
       thread.Resume;
       while not thread.operationDone do begin
@@ -499,7 +496,7 @@ function TDownloadEngine.GetFTPSize(const url: string; out size: longword): bool
 var thread: TFTPSizeThread;
 begin
   fFtp.Timeout := fTimeOut;
-  thread := TFTPSizeThread.Create(url, fFtp);
+  thread := TFTPSizeThread.Create(url, fFtp, GetCurrentThreadId);
   thread.Resume;
   while not thread.operationDone do begin
     handlemessage;
@@ -522,7 +519,7 @@ begin
   try
     SetProxy(FHTTP);
     fhttp.Timeout := fTimeOut;
-    thread := THeadThread.Create(url, fhttp);
+    thread := THeadThread.Create(url, fhttp, GetCurrentThreadId);
     thread.Resume;
     while not thread.operationDone do begin
       handlemessage;
@@ -544,14 +541,14 @@ end;
 
 procedure TFTPGetThread.Abort;
 begin
-  fftp.Abort;
+  FFtp.Abort;
 end;
 
-constructor TFTPGetThread.create(const url: string; ftp: TFTPSend);
+constructor TFTPGetThread.create(const url: string; ftp: TFTPSend; callerThreadID: DWORD);
 begin
-  inherited create(true);
-  fFtp := ftp;
-  fUrl := url;
+  inherited create(callerThreadID);
+  FFtp := ftp;
+  FUrl := url;
 end;
 
 procedure TFTPGetThread.Execute;
@@ -559,20 +556,20 @@ var prot, user, pass, host, port, path, para: string;
 begin
   try
     try
-      fOperationSuccess := false;
+      FOperationSuccess := false;
 
-      if ConnectToServer(fFtp, fUrl) then begin
-        fFtp.DirectFile := false;
+      if ConnectToServer(FFtp, FUrl) then begin
+        FFtp.DirectFile := false;
 
-        ParseURL(fUrl, prot, user, pass, host, port, path, para);
-        fOperationSuccess := fFtp.RetrieveFile(path, false);
+        ParseURL(FUrl, prot, user, pass, host, port, path, para);
+        FOperationSuccess := FFtp.RetrieveFile(path, false);
       end;
     except on e: exception do
         outputdebugstring(pchar(e.Message));
     end;
   finally
-    foperationdone := true;
-    PostMessage(0, WM_USER, 0, 0); //wake up the message loop
+    FOperationdone := true;
+    PostThreadMessage(FCallerThreadID, WM_USER, 0, 0); //wake up the message loop
   end;
 end;
 
@@ -583,13 +580,11 @@ begin
   fhttp.Abort;
 end;
 
-constructor TGetThread.create(const url: string; http: THTTPSend);
+constructor TGetThread.create(const url: string; http: THTTPSend; callerThreadID: DWORD);
 begin
-  inherited create(true);
+  inherited create(callerThreadID);
   fUrl := url;
   fHttp := http;
-  foperationdone := false;
-  foperationsuccess := false;
 end;
 
 procedure TGetThread.Execute;
@@ -620,7 +615,7 @@ begin
     end;
   finally
     foperationdone := true;
-    PostMessage(0, WM_USER, 0, 0); //wake up the message loop
+    PostThreadMessage(FCallerThreadID, WM_USER, 0, 0); //wake up the message loop
   end;
 end;
 
@@ -631,13 +626,11 @@ begin
   fhttp.abort;
 end;
 
-constructor THeadThread.create(const url: string; http: THTTPSend);
+constructor THeadThread.create(const url: string; http: THTTPSend; callerThreadID: DWORD);
 begin
-  inherited create(true);
+  inherited create(callerThreadID);
   furl := url;
   fhttp := http;
-  foperationdone := false;
-  foperationsuccess := false;
 end;
 
 procedure THeadThread.Execute;
@@ -669,7 +662,7 @@ begin
 
   finally
     foperationdone := true;
-    PostMessage(0, WM_USER, 0, 0); //wake up the message loop
+    PostThreadMessage(FCallerThreadID, WM_USER, 0, 0); //wake up the message loop
   end;
 end;
 
@@ -680,9 +673,9 @@ begin
   fftp.abort;
 end;
 
-constructor TFTPSizeThread.create(const url: string; ftp: TFTPSend);
+constructor TFTPSizeThread.create(const url: string; ftp: TFTPSend; callerThreadID: DWORD);
 begin
-  inherited create(true);
+  inherited create(callerThreadID);
   fUrl := url;
   fFtp := ftp;
 end;
@@ -700,7 +693,7 @@ begin
     end;
   finally
     foperationdone := true;
-    PostMessage(0, WM_USER, 0, 0); //wake up the message loop
+    PostThreadMessage(FCallerThreadID, WM_USER, 0, 0); //wake up the message loop
   end;
 end;
 
@@ -711,9 +704,9 @@ begin
   fhttp.abort;
 end;
 
-constructor TPostThread.create(const url, data: string; http: THTTPSend);
+constructor TPostThread.create(const url, data: string; http: THTTPSend; callerThreadID: DWORD);
 begin
-  inherited create(true);
+  inherited create(callerThreadID);
   furl := url;
   fdata := data;
   fHttp := http;
@@ -728,8 +721,17 @@ begin
     foperationsuccess := fHTTP.HTTPMethod('POST', fURL);
   finally
     foperationdone := true;
-    PostMessage(0, WM_USER, 0, 0); //wake up the message loop
+    PostThreadMessage(FCallerThreadID, WM_USER, 0, 0); //wake up the message loop
   end;
+end;
+
+{ TRequestThread }
+
+constructor TRequestThread.Create(callerThreadID: DWORD);
+begin
+  inherited create(true);
+
+  FCallerThreadID := callerThreadID;
 end;
 
 end.

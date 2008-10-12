@@ -56,3 +56,5 @@ Name: {group}\{cm:UninstallProgram,{#MyAppName}}; Filename: {uninstallexe}
 [Registry]
 Root: HKLM; Subkey: Software\Sherlock Software\InnoTools\Downloader; ValueType: string; ValueName: InstallPath; ValueData: {app}; Flags: uninsdeletekey
 Root: HKLM; Subkey: Software\Sherlock Software\InnoTools\Downloader; ValueType: string; ValueName: ScriptPath; ValueData: {app}\it_download.iss; Flags: uninsdeletekey
+[InstallDelete]
+Name: {app}\licence.txt; Type: files

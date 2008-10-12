@@ -497,19 +497,17 @@ end;
 function TITDEngine.GetOption(const option: string): string;
 begin
   if AnsiCompareText(option, 'ITD_Version') = 0 then
-    result := itdversion else
-    if AnsiCompareText(option, 'Debug_DownloadDelay') = 0 then
-      result := inttostr(FDownloadDelay) else
-      if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
-        result := '0'; //Depreceated
-      end else
-        if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
-          if FSmooth then result := '1' else result := '0';
-        end else
-          if AnsiCompareText(option, 'Debug_Messages') = 0 then begin
-            if FDebugMessages then result := '1' else result := '0'
-          end else
-            result := '';
+    result := itdversion
+  else if AnsiCompareText(option, 'Debug_DownloadDelay') = 0 then
+    result := inttostr(FDownloadDelay)
+  else if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
+    result := '0'; //Depreceated
+  end else if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
+    if FSmooth then result := '1' else result := '0';
+  end else if AnsiCompareText(option, 'Debug_Messages') = 0 then begin
+    if FDebugMessages then result := '1' else result := '0'
+  end else
+    result := '';
 end;
 
 procedure TITDEngine.SetOption(const option, value: string);
@@ -517,24 +515,21 @@ var t1: integer;
 begin
   if AnsiCompareText(option, 'Debug_DownloadDelay') = 0 then begin
     FDownloadDelay := strtoint(value);
-  end else
-    if AnsiCompareText(option, 'ITD_TimeOut') = 0 then begin
-      FWE.timeout := strtoint(value);
-    end else
-      if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
+  end else if AnsiCompareText(option, 'ITD_TimeOut') = 0 then begin
+    FWE.timeout := strtoint(value);
+  end else if AnsiCompareText(option, 'ITD_NoCache') = 0 then begin
         // fwe.nocache := (value = '1'); Depreceated
-      end else
-        if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
-          FSmooth := value = '1';
-          for t1 := 0 to FUIs.count - 1 do begin
-            tui(FUIs[t1]).barCurrent.smooth := FSmooth;
-            tui(FUIs[t1]).barTotal.smooth := FSmooth;
-          end;
-        end else if AnsiCompareText(option, 'UI_DetailedMode') = 0 then begin
-          if assigned(FUI) then
-            FUI.DetailedMode := value = '1';
-        end else if AnsiCompareText(option, 'Debug_Messages') = 0 then
-          FDebugMessages := (value = '1');
+  end else if AnsiCompareText(option, 'UI_SmoothBars') = 0 then begin
+    FSmooth := value = '1';
+    for t1 := 0 to FUIs.count - 1 do begin
+      tui(FUIs[t1]).barCurrent.smooth := FSmooth;
+      tui(FUIs[t1]).barTotal.smooth := FSmooth;
+    end;
+  end else if AnsiCompareText(option, 'UI_DetailedMode') = 0 then begin
+    if assigned(FUI) then
+      FUI.DetailedMode := value = '1';
+  end else if AnsiCompareText(option, 'Debug_Messages') = 0 then
+    FDebugMessages := (value = '1');
 end;
 
 procedure TITDEngine.CreateUI(hosthwnd: hwnd);
