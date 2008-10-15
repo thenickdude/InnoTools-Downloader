@@ -47,7 +47,7 @@ begin
 
 	  ITT_MinimizeToTray();
 
-	  ITT_ShowBalloon('Setup is downloading files...',
+	  ITT_ShowBalloon('Setup is downloading additional files...',
 	  'You can continue to use your computer while setup '+
 	  'is downloading files.',10);
   end;
@@ -72,12 +72,33 @@ begin
  end;
 end;
 
+{Contributed by Hilbrand Edskes. Sets the HTTP agent
+ that ITD uses to a custom one which includes information
+ about which version of Windows that the customer is using.
+
+ Great for tracking the popularity of your software on different
+ platforms! (If you want to send more detailed information,
+ then consider posting a string to your server as in
+ Example2.iss)
+}
+procedure SetCustomUserAgent();
+var UA:String;
+begin
+  // Create User Agent String and include system information and version
+  UA:='InnoTools Downloader '+ITD_GetOption('ITD_Version')+' (Windows '
+  if UsingWinNT then UA:=UA + 'NT '
+  if IsWin64 then UA:=UA + 'x64 '
+  UA:=UA + GetWindowsVersionString + ')'
+  // Changes the "agent" field used in HTTP requests
+  ITD_SetOption('ITD_Agent', UA);
+end;
+
 procedure InitializeWizard();
 begin
  itd_init;
  itt_init; //Important! Create (but don't display yet) the tray icon
 
- itt_sethint('Downloading files...');
+ ITT_SetHint('Downloading files...');
 
  itd_EventHandler:=@MyITDEventHandler;
 
@@ -92,7 +113,7 @@ begin
 
  {And let's change the agent string that is used to identify
   the "browser" that is making HTTP requests}
- itd_setoption('ITD_Agent', 'They cut the hard line, it''s a trap. Get out!');
+ SetCustomUserAgent;
 
  //Start the download after the "Ready to install" screen is shown
  itd_downloadafter(wpReady);
