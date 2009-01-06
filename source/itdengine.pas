@@ -90,6 +90,8 @@ type
 
     FFiles: tobjectlist;
 
+    FDownloadedFiles:TStringList;
+
     FTotalSizeUnknown: boolean;
 
     FLastProgress: TDateTime;
@@ -134,6 +136,8 @@ type
     function GetOption(const option: string): string;
     function DownloadFile(const url, filename: string): integer;
     function DownloadFiles(surface: hwnd): integer;
+
+    function FileDownloaded(const filename:string):boolean;
 
     property Files[index: integer]: TDLFile read getfile;
     property DownloadDelay: integer read FDownloadDelay write FDownloadDelay;
@@ -420,6 +424,8 @@ begin
 
   FDefaultSmooth := false;
   FDefaultDetailedMode := false;
+
+  FDownloadedFiles:=TStringList.Create;
 end;
 
 procedure TITDEngine.AddMirror(const url, filename: string);
@@ -450,6 +456,7 @@ end;
 
 destructor TITDEngine.destroy;
 begin
+  FDownloadedFiles.Free;
   FWE.free;
   FUIs.free;
   FFiles.free;
@@ -570,6 +577,7 @@ end;
 
 procedure TITDEngine.ClearFiles;
 begin
+  FDownloadedFiles.Clear;
   FFiles.Clear;
 end;
 
@@ -726,6 +734,11 @@ begin
   end;
 end;
 
+function TITDEngine.FileDownloaded(const filename: string): boolean;
+begin
+ result:=FDownloadedFiles.IndexOf(uppercase(filename))>-1;
+end;
+
 function TITDEngine.downloadlist(files: tobjectlist): integer;
 var t1, i: integer;
   filestream: TFileStream;
@@ -779,28 +792,34 @@ begin
 
       filestream := TFileStream.Create(f.filename, fmCreate or fmShareDenyNone);
       try
-        success := false;
-        for url in f.urls do begin
-          if FWE.DownloadWebFileToStream(url, filestream, f) then begin
-            success := true;
-            break;
+        try
+          success := false;
+          for url in f.urls do begin
+            if FWE.DownloadWebFileToStream(url, filestream, f) then begin
+              success := true;
+              break;
+            end;
           end;
-        end;
-        if not success then begin //couldn't get this file from any mirror
-          if terminated then begin
-            raise EErrorCode.create(ITDERR_USERCANCEL);
+          if not success then begin //couldn't get this file from any mirror
+            if terminated then begin
+              raise EErrorCode.create(ITDERR_USERCANCEL);
+            end;
+
+            if FDebugMessages then begin
+              showmessage('Error: ' + FWE.LastError);
+            end;
+            raise EErrorcode.create(ITDERR_ERROR);
           end;
 
-          if FDebugMessages then begin
-            showmessage('Error: ' + FWE.LastError);
-          end;
-          raise EErrorcode.create(ITDERR_ERROR);
+          FTotalBytesWritten := FTotalBytesWritten + filestream.Size;
+        finally
+          filestream.free;
         end;
-
-        FTotalBytesWritten := FTotalBytesWritten + filestream.Size;
-      finally
-        filestream.free;
+      except
+        deletefile(pchar(f.filename));
+        raise;
       end;
+      FDownloadedFiles.Add(uppercase(f.filename));
       files.remove(f); //we have finished this file!
     end;
 
@@ -967,9 +986,14 @@ begin
   result := length(resultbuffer);
 end;
 
+function itd_isdownloadcomplete(filename:pchar):boolean; stdcall;
+begin
+  result:= engine.FileDownloaded(filename);
+end;
+
 exports itd_downloadfile, itd_addfile, itd_addfilesize, itd_clearfiles, itd_downloadfiles, itd_initui,
   itd_cancel, itd_setoption, itd_getoption, itd_filecount, itd_setstring, itd_getstring, itd_loadstrings,
-  itd_addmirror, itd_postpage, itd_getresultstring, itd_getresultlen, itd_getfilesize;
+  itd_addmirror, itd_postpage, itd_getresultstring, itd_getresultlen, itd_getfilesize, itd_isdownloadcomplete;
 
 initialization
   engine := TITDEngine.create;

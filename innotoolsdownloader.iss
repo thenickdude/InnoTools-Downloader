@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "InnoTools Downloader"
-#define MyAppVerName "InnoTools Downloader 0.3.5"
+#define MyAppVerName "InnoTools Downloader 0.3.6"
 #define MyAppPublisher "Sherlock Software"
 #define MyAppURL "http://www.sherlocksoftware.org"
 #define MyAppUrlName "Sherlock Software.url"
@@ -38,6 +38,7 @@ Source: example3 1.0.iss; DestDir: {app}\examples
 Source: example3 2.0.iss; DestDir: {app}\examples
 Source: example4.iss; DestDir: {app}\examples
 Source: example5.iss; DestDir: {app}\examples
+Source: example6.iss; DestDir: {app}\examples
 Source: ITDHelp.chm; DestDir: {app}
 Source: source\*.pas; DestDir: {app}\Source
 Source: source\*.dpr; DestDir: {app}\Source
@@ -46,6 +47,7 @@ Source: languages\*; DestDir: {app}\languages
 
 [Run]
 Filename: {app}\ITDHelp.chm; Flags: shellexec skipifdoesntexist postinstall skipifsilent; Languages: ; Description: View the help file
+Filename: {app}\examples; Flags: shellexec skipifdoesntexist postinstall skipifsilent; Languages: ; Description: Open the examples folder
 
 [Icons]
 Name: {group}\Visit Sherlock Software; Filename: http://www.sherlocksoftware.org/

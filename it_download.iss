@@ -5,7 +5,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
 (*
  Inno Tools Downloader DLL
  Copyright (C) Sherlock Software 2008
- Version 0.3.5
+ Version 0.3.6
 
  Contact:
   The author, Nicholas Sherlock, at nick@sherlocksoftware.org.
@@ -15,6 +15,8 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
   http://www.sherlocksoftware.org/
 
  History:
+  0.3.6 - Added callback that allows you to decide whether the install can continue
+          when some downloaded files are missing.
   0.3.5 - Moved strings used in the updater example to the language file, so that they
           may be more easily translated.
           Added event functions to support the example of integration with InnoTools tray.
@@ -63,6 +65,9 @@ function ITD_GetResultLen: integer;
 procedure ITD_GetResultString(buffer: pchar; maxlen: integer);
   external 'itd_getresultstring@files:itdownload.dll stdcall';
 
+function ITD_Internal_IsDownloadComplete(filename:pchar):boolean;
+  external 'itd_isdownloadcomplete@files:itdownload.dll stdcall';
+
 procedure ITD_Internal_InitUI(HostHwnd: dword);
   external 'itd_initui@files:itdownload.dll stdcall';
 
@@ -102,8 +107,14 @@ function ITD_FileCount: integer;
 function ITD_Internal_PostPage(url, buffer: PChar; length: integer): boolean;
   external 'itd_postpage@files:itdownload.dll stdcall';
 
+type
+  TITD_AllowContinueEvent=function:integer;
 
 const
+  ITD_Offer_Continue = 0;
+  ITD_Silently_Continue = 1;
+  ITD_No_Continue = 2;
+
   ITDERR_SUCCESS = 0;
   ITDERR_USERCANCEL = 1;
   ITDERR_ERROR = 3;
@@ -135,11 +146,12 @@ const
   ITD_Event_DownloadFailed = 3;
 
 var
-  itd_allowcontinue: boolean;
-  itd_retryonback: boolean;
+  ITD_AllowContinue: boolean;
+  ITD_RetryOnBack: boolean;
 
   ITD_AfterSuccess: procedure(downloadPage: TWizardPage);
   ITD_EventHandler: procedure(event: integer);
+  ITD_AllowContinueEvent: TITD_AllowContinueEvent;
 
 procedure ITD_DownloadFiles();
 begin
@@ -166,6 +178,11 @@ begin
   result := (itd_filecount = 0);
 end;
 
+function ITD_IsDownloadComplete(const filename:string):boolean;
+begin
+  result:=ITD_Internal_IsDownloadComplete(pchar(filename));
+end;
+
 procedure ITD_SetString(index: integer; value: string);
 begin
   itd_internal_setstring(index, value);
@@ -190,6 +207,7 @@ end;
 
 procedure ITD_NowDoDownload(sender: TWizardPage);
 var err: integer;
+ allowcontinue:boolean;
 begin
   wizardform.backbutton.enabled := false;
   wizardform.nextbutton.enabled := false;
@@ -215,21 +233,41 @@ begin
       wizardform.backbutton.show();
       itd_retryonback := true;
 
-      wizardform.nextbutton.enabled := itd_allowcontinue;
-
       if ITD_EventHandler <> nil then
         ITD_EventHandler(ITD_Event_DownloadFailed);
 
-      if itd_allowcontinue then begin //Download failed, we can retry, continue, or exit
+      if (ITD_AllowContinueEvent <> nil) then begin
+        case ITD_AllowContinueEvent() of
+          ITD_Offer_Continue: allowcontinue:=true;
+          ITD_Silently_Continue:begin
+            wizardform.nextbutton.enabled := true;
+            wizardform.nextbutton.onclick(nil);
+
+            if itd_aftersuccess <> nil then
+              itd_aftersuccess(sender);
+              
+            exit;
+          end;
+          ITD_No_Continue: allowcontinue:=false;
+        end;
+      end else
+        allowcontinue:=itd_allowcontinue;
+        
+      if itd_allowcontinue then begin
+        wizardform.nextbutton.enabled := true;
+
+        //Download failed, we can retry, continue, or exit
         sender.caption := ITD_GetString(ITDS_DownloadFailed);
         sender.description := ITD_GetString(ITDS_MessageFailRetryContinue);
 
-        MsgBox(ITD_GetString(ITDS_MessageFailRetryContinue), mbError, MB_OK)
+        MsgBox(ITD_GetString(ITDS_MessageFailRetryContinue), mbError, MB_OK);
       end else begin //Download failed, we must retry or exit setup
+        wizardform.nextbutton.enabled := false;
+
         sender.caption := ITD_GetString(ITDS_DownloadFailed);
         sender.description := ITD_GetString(ITDS_MessageFailRetry);
 
-        MsgBox(ITD_GetString(ITDS_MessageFailRetry), mbError, MB_OK)
+        MsgBox(ITD_GetString(ITDS_MessageFailRetry), mbError, MB_OK);
       end;
     end;
   end;
@@ -266,7 +304,7 @@ end;
 
 procedure ITD_Init;
 begin
- //Currently a NOP. Don't count on it in future.
+  //Currently a NOP, don't count on it in future!
 end;
 
 function ITD_PostPage(const url, data: string; out response: string): boolean;
