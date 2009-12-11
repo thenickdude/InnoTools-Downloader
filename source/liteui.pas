@@ -686,7 +686,7 @@ begin
     GetTextExtentPoint32(paint.hdc, pchar(caption), length(caption), s);
 
     case align of
-      laLeft, laMiddle: TextOut(paint.hdc, 0, 0, pchar(caption), length(caption));
+      laLeft, laMiddle: TextOutW(paint.hdc, 0, 0, pwidechar(widestring(caption)), length(caption));
       laRight: TextOut(paint.hdc, width - s.cx - 1, 0, pchar(caption), length(caption));
     end;
   finally

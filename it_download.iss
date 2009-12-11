@@ -145,9 +145,14 @@ const
   ITD_Event_DownloadPageLeft = 2;
   ITD_Event_DownloadFailed = 3;
 
+  ITD_Event_FileBegin = 4;
+  ITD_Event_FileEnd = 5;
+  
+
 var
   ITD_AllowContinue: boolean;
   ITD_RetryOnBack: boolean;
+  ITD_CurrentFile: string;
 
   ITD_AfterSuccess: procedure(downloadPage: TWizardPage);
   ITD_EventHandler: procedure(event: integer);
@@ -253,7 +258,7 @@ begin
       end else
         allowcontinue:=itd_allowcontinue;
         
-      if itd_allowcontinue then begin
+      if allowcontinue then begin
         wizardform.nextbutton.enabled := true;
 
         //Download failed, we can retry, continue, or exit
