@@ -23,11 +23,12 @@ Name: en; MessagesFile: compiler:Default.isl
 Name: fr; MessagesFile: compiler:Languages\French.isl
 Name: nl; MessagesFile: compiler:Languages\Dutch.isl
 Name: ptbr; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
+Name: es; MessagesFile: compiler:Languages\Spanish.isl
 
 ; You'll need the Greek InnoSetup translation from the Inno Setup
-; third-party section for this. I found that I also needed to add
-; "LanguageCodePage=1253" to the InnoSetup Greek translation to get the
-; right characters to display.
+; third-party section for this. If you are using the Unicode InnoSetup,
+; you can add "LanguageCodePage=1253" to the InnoSetup Greek translation
+; to get the right characters to display on non-Greek Windows.
 Name: gr; MessagesFile: compiler:Languages\Greek.isl
 
 #define ITDRoot ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')
@@ -35,7 +36,13 @@ Name: gr; MessagesFile: compiler:Languages\Greek.isl
 #include ITDRoot+'\it_download.iss'
 
 [Files]
+#IF DEFINED(UNICODE)
+	; Include these files if you are using the Unicode InnoSetup version:
+Source: {#ITDRoot}\languages\*.ini.utf16; Flags: dontcopy
+#ELSE
+	; Include these files if you are using the ANSI InnoSetup version:
 Source: {#ITDRoot}\languages\*.ini; Flags: dontcopy
+#ENDIF
 
 [Code]
 { EXAMPLE 4
@@ -48,17 +55,24 @@ Source: {#ITDRoot}\languages\*.ini; Flags: dontcopy
 {Load the ITD language file that corresponds to Inno's selected
  language}
 procedure LoadITDLang;
-var lang:string;
+var
+ lang:string;
+ filename:string;
 begin
  lang:=ExpandConstant('{language}');
+ filename:='itd_'+lang+'.ini';
+
+ #IF DEFINED(UNICODE)
+ filename:=filename+'.utf16';
+ #ENDIF
 
  try
-   ExtractTemporaryFile('itd_'+lang+'.ini');
+   ExtractTemporaryFile(filename);
 
-   ITD_LoadStrings(expandconstant('{tmp}\itd_'+lang+'.ini'));
+   ITD_LoadStrings(expandconstant('{tmp}\'+filename));
  except
    {We get here if the selected language wasn't included in the
-    set of ITD translation files. In this case, just use ITD's
+    set of ITD translation files. In this case, we just use ITD's
     built in translation file (English), by not loading anything.
 
     Note that the exception will still appear while debugging -

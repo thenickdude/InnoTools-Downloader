@@ -43,3 +43,4 @@ begin
   filecopy(expandconstant('{tmp}\petz4.zip'),expandconstant('{app}\petz4.zip'),false);
  end;
 end;
+

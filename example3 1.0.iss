@@ -49,7 +49,7 @@ var ErrorCode:integer;
  (* text:string; *)
 begin
  (*
-	 Tell the user about the new installer. The message is pretty ugly if
+	 Tell the user about the location of the new installer. The message is pretty ugly if
 	 NewInstallerPath is left at the default (The {tmp} directory)
 
 	 text:=ITD_GetString(ITDS_Update_WillLaunchWithPath);

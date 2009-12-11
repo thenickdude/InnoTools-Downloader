@@ -41,7 +41,7 @@ end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
- response:AnsiString;
+ response:String;
 begin
  result:=true;
 
@@ -65,4 +65,3 @@ begin
    end;
  end;
 end;
-

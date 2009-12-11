@@ -81,11 +81,12 @@ type
 
   TPostThread = class(TRequestThread)
   private
-    furl, fData: string;
+    FUrl:String;
+    FData: AnsiString;
     fhttp: THTTPSend;
   protected
     procedure Abort;
-    constructor create(const url, data: string; http: THTTPSend; callerThreadID: DWORD);
+    constructor create(const url:string; const data: AnsiString; http: THTTPSend; callerThreadID: DWORD);
     procedure Execute; override;
   end;
 
@@ -122,7 +123,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function PostPage(const url, data: string; out resultbuffer: string): boolean;
+    function PostPage(const url:string; const data: ansistring; out resultbuffer: string): boolean;
 
     function GetWebFileSize(const url: string; out size: longword): boolean;
     function DownloadWebFileToStream(const url: string; stream: TStream;
@@ -212,7 +213,7 @@ var
   buffer: array[0..4095] of byte;
   info: TInternetProxyInfo absolute buffer;
   len: cardinal;
-  host: string;
+  host: String;
   list: TStringList;
 begin
 
@@ -223,7 +224,7 @@ begin
   if InternetQueryOption(nil, INTERNET_OPTION_PROXY, @info, len) then begin
     if info.dwAccessType = INTERNET_OPEN_TYPE_PROXY then begin
 
-      host := info.lpszProxy;
+      host := String(info.lpszProxy);
 
       list := TStringList.create;
       try
@@ -332,8 +333,10 @@ begin
   end;
 end;
 
-function TDownloadEngine.PostPage(const url, data: string; out resultbuffer: string): boolean;
-var thread: TPostThread;
+function TDownloadEngine.PostPage(const url:string; const data: AnsiString; out resultbuffer: string): boolean;
+var
+  thread: TPostThread;
+  ansiTemp:AnsiString;
 begin
   fhttp := THTTPSend.Create;
   try
@@ -345,7 +348,7 @@ begin
 
     thread := TPostThread.Create(url, data, fhttp, GetCurrentThreadId);
     try
-      thread.Resume;
+      thread.resume;
       while not thread.operationDone do begin
         handlemessage;
         if terminated then
@@ -354,8 +357,11 @@ begin
 
       if thread.operationsuccess then begin
         result := true;
-        setlength(resultbuffer, fHTTP.Document.size);
-        fHTTP.Document.Read(resultBuffer[1], length(resultbuffer));
+
+        setlength(ansitemp,fHTTP.Document.size);
+        fHTTP.Document.Read(ansitemp[1], length(ansitemp));
+
+        resultbuffer:=string(ansiTemp);
       end else begin
         result := false;
         fLastError := 'HTTP error code ' + inttostr(fHttp.ResultCode);
@@ -421,7 +427,7 @@ begin
 
   thread := TFTPGetThread.Create(url, fFtp, GetCurrentThreadId);
   try
-    thread.Resume;
+    thread.resume;
     while not thread.operationDone do begin
       handlemessage;
       if terminated then
@@ -464,7 +470,7 @@ begin
 
     thread := TGetThread.Create(url, fhttp, GetCurrentThreadId);
     try
-      thread.Resume;
+      thread.resume;
       while not thread.operationDone do begin
         handlemessage;
         if terminated then
@@ -503,7 +509,7 @@ var thread: TFTPSizeThread;
 begin
   fFtp.Timeout := fTimeOut;
   thread := TFTPSizeThread.Create(url, fFtp, GetCurrentThreadId);
-  thread.Resume;
+  thread.resume;
   while not thread.operationDone do begin
     handlemessage;
     if terminated then
@@ -526,7 +532,7 @@ begin
     SetOptions(FHTTP);
     fhttp.Timeout := fTimeOut;
     thread := THeadThread.Create(url, fhttp, GetCurrentThreadId);
-    thread.Resume;
+    thread.resume;
     while not thread.operationDone do begin
       handlemessage;
       if terminated then
@@ -537,6 +543,7 @@ begin
       size := thread.size;
       result := true;
     end else begin
+        showmessage('fail');
       result := false;
     end;
   finally
@@ -662,6 +669,7 @@ begin
 
       if not ((fhttp.resultcode >= 200) and (fhttp.resultCode < 300)) then
         foperationsuccess := false;
+
       fsize := fhttp.DownloadSize;
     end else
       fsize := 0;
@@ -710,7 +718,7 @@ begin
   fhttp.abort;
 end;
 
-constructor TPostThread.create(const url, data: string; http: THTTPSend; callerThreadID: DWORD);
+constructor TPostThread.create(const url:string; const data: ansistring; http: THTTPSend; callerThreadID: DWORD);
 begin
   inherited create(callerThreadID);
   furl := url;

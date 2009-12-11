@@ -125,7 +125,7 @@ type
 
     function Count: integer;
 
-    function PostPage(const url, data: string; out resultbuffer: string): boolean;
+    function PostPage(const url: string; const data:ansistring; out resultbuffer: string): boolean;
 
     procedure Cancel;
     function CreateUI(hosthwnd: hwnd): TUI;
@@ -385,7 +385,7 @@ begin
   self.filename := filename;
 end;
 
-procedure tdlfile.querysize(wine: TDownloadEngine);
+procedure TDLFile.querysize(wine: TDownloadEngine);
 var swap: string;
   i: integer;
 begin
@@ -481,7 +481,7 @@ begin
   result := FUI;
 end;
 
-function TITDEngine.PostPage(const url, data: string; out resultbuffer: string): boolean;
+function TITDEngine.PostPage(const url:string; const  data: ansistring; out resultbuffer: string): boolean;
 begin
   result := FWE.PostPage(url, data, resultbuffer);
 end;
@@ -950,12 +950,15 @@ begin
   result := length(resultbuffer) > 0;
 end;
 
-function itd_postpage(url: pchar; buffer: pchar; length: integer): boolean; stdcall;
-var data: string;
+function itd_postpage(url:PChar; buffer: PAnsiChar; length: integer): boolean; stdcall;
+var
+  data: AnsiString;
 begin
   try
-    setlength(data, length);
+    //Buffer may have embedded #0 so turn it into a Delphi string.
+    SetLength(data, length);
     Move(buffer^, data[1], length);
+
     result := engine.PostPage(url, data, resultbuffer);
   except
     result := false;
@@ -971,9 +974,9 @@ begin
 end;
 
 
-procedure itd_getresultstring(buffer: pchar; maxlen: integer); stdcall;
+procedure itd_getresultstring(buffer: PChar; maxlen: integer); stdcall;
 begin
-  move(resultbuffer[1], buffer^, min(length(resultbuffer), maxlen));
+  Move(resultbuffer[1], buffer^, min(length(resultbuffer), maxlen)*sizeof(resultbuffer[1]));
 end;
 
 function itd_getfilesize(url: pchar; var size: cardinal): boolean; stdcall;

@@ -27,12 +27,13 @@ Name: english; MessagesFile: compiler:Default.isl
 function MyAllowContinueEvent:integer;
 begin
  //Allow installation to continue only if the critical file downloaded successfully
- if ITD_IsDownloadComplete(expandconstant('{tmp}\dogz5.zip')) then
-   result:=ITD_Silently_Continue
- else
+ if ITD_IsDownloadComplete(expandconstant('{tmp}\dogz5.zip')) then begin
+   result:=ITD_Silently_Continue;
+
+  { The other possibility is ITD_Offer_Continue - ask the user if they want to continue or not}
+ end else
    result:=ITD_No_Continue;
-   
- // (The other possibility is ITD_Offer_Continue)
+
 end;
 
 procedure InitializeWizard();
@@ -46,7 +47,7 @@ begin
  {One of these files is critical and the installation should not continue if
  the file cannot be downloaded. The other is non-critical and the user should
  have the option of continuing setup if the file did not download.
- 
+
  The second file here is non-critical, and in fact I've misspelled the URL so the download will fail.
 
  We'll install a custom handler to decide if continuing is allowed}

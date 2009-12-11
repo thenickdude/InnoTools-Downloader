@@ -182,7 +182,7 @@ var keys: TStringlist;
   temp: TMemIniFile;
   t1: integer;
 begin
-  temp := TMemIniFile.create(filename);
+  temp := TMemIniFile.create(filename{$IFDEF UNICODE}, TEncoding.Unicode{$ENDIF});
   try
     keys := tstringlist.create;
     try
@@ -211,7 +211,6 @@ begin
   fstrings.Clear;
   for t1 := Low(DefaultStrings) to High(DefaultStrings) do
     fstrings.WriteString('Strings', inttostr(defaultstrings[t1].id), defaultstrings[t1].text);
-
 end;
 
 destructor TITDStrings.Destroy;
