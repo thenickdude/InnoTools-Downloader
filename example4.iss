@@ -23,6 +23,11 @@ Name: en; MessagesFile: compiler:Default.isl
 Name: fr; MessagesFile: compiler:Languages\French.isl
 Name: nl; MessagesFile: compiler:Languages\Dutch.isl
 Name: ptbr; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
+
+; You'll need the Greek InnoSetup translation from the Inno Setup
+; third-party section for this. I found that I also needed to add
+; "LanguageCodePage=1253" to the InnoSetup Greek translation to get the
+; right characters to display.
 Name: gr; MessagesFile: compiler:Languages\Greek.isl
 
 #define ITDRoot ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')

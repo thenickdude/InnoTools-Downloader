@@ -85,10 +85,10 @@ const
     (id: IS_TitleCaption; text: 'Downloading additional files'),
     (id: IS_TitleDescription; text: 'Please wait while setup downloads additional files...'),
 
-    (id: IS_MessageFailRetryContinue; text: 'Sorry, the files could not be downloaded. ' +
+    (id: IS_MessageFailRetryContinue; text: 'Sorry, some files could not be downloaded. ' +
     'Click ''Retry'' to try downloading the files again, or click ''Next'' to continue installing anyway.'),
 
-    (id: IS_MessageFailRetry; text: 'Sorry, the files could not be downloaded. ' +
+    (id: IS_MessageFailRetry; text: 'Sorry, some files could not be downloaded. ' +
     'Click ''Retry'' to try downloading the files again, or click ''Cancel'' to terminate setup.'),
 
     (id: IS_File; text: 'File:'),

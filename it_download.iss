@@ -5,7 +5,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
 (*
  Inno Tools Downloader DLL
  Copyright (C) Sherlock Software 2008
- Version 0.3.5
+ Version 0.3.6
 
  Contact:
   The author, Nicholas Sherlock, at nick@sherlocksoftware.org.
@@ -15,6 +15,9 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
   http://www.sherlocksoftware.org/
 
  History:
+  0.3.6 - Added callback that allows you to decide whether the install can continue
+          when some downloaded files are missing.
+          Fixed compatibility with Unicode Inno Setup
   0.3.5 - Moved strings used in the updater example to the language file, so that they
           may be more easily translated.
           Added event functions to support the example of integration with InnoTools tray.
@@ -54,43 +57,46 @@ procedure ITD_Cancel;
 procedure ITD_ClearFiles;
   external 'itd_clearfiles@files:itdownload.dll stdcall';
 
-function ITD_DownloadFile(url: PChar; destfilename: PChar): integer;
+function ITD_DownloadFile(url: PAnsiChar; destfilename: PAnsiChar): integer;
   external 'itd_downloadfile@files:itdownload.dll stdcall';
 
 function ITD_GetResultLen: integer;
   external 'itd_getresultlen@files:itdownload.dll stdcall';
 
-procedure ITD_GetResultString(buffer: pchar; maxlen: integer);
+procedure ITD_GetResultString(buffer: PAnsiChar; maxlen: integer);
   external 'itd_getresultstring@files:itdownload.dll stdcall';
+
+function ITD_Internal_IsDownloadComplete(filename:PAnsiChar):boolean;
+  external 'itd_isdownloadcomplete@files:itdownload.dll stdcall';
 
 procedure ITD_Internal_InitUI(HostHwnd: dword);
   external 'itd_initui@files:itdownload.dll stdcall';
 
-function ITD_Internal_LoadStrings(filename: PChar): boolean;
+function ITD_Internal_LoadStrings(filename: PAnsiChar): boolean;
   external 'itd_loadstrings@files:itdownload.dll stdcall';
 
-procedure ITD_Internal_SetOption(option, value: PChar);
+procedure ITD_Internal_SetOption(option, value: PAnsiChar);
   external 'itd_setoption@files:itdownload.dll stdcall';
 
-function ITD_Internal_GetFileSize(url: pchar; var size: Cardinal): boolean;
+function ITD_Internal_GetFileSize(url: PAnsiChar; var size: Cardinal): boolean;
   external 'itd_getfilesize@files:itdownload.dll stdcall';
 
 function ITD_Internal_GetString(index: integer): boolean;
   external 'itd_getstring@files:itdownload.dll stdcall';
 
-function ITD_Internal_GetOption(option: PChar; buffer: PChar; length: integer): integer;
+function ITD_Internal_GetOption(option: PAnsiChar; buffer: PAnsiChar; length: integer): integer;
   external 'itd_getoption@files:itdownload.dll stdcall';
 
-procedure ITD_Internal_SetString(index: integer; value: PChar);
+procedure ITD_Internal_SetString(index: integer; value: PAnsiChar);
   external 'itd_setstring@files:itdownload.dll stdcall';
 
-procedure ITD_Internal_AddFile(url: PChar; destfilename: PChar);
+procedure ITD_Internal_AddFile(url: PAnsiChar; destfilename: PAnsiChar);
   external 'itd_addfile@files:itdownload.dll stdcall';
 
-procedure ITD_Internal_AddMirror(url: PChar; destfilename: PChar);
+procedure ITD_Internal_AddMirror(url: PAnsiChar; destfilename: PAnsiChar);
   external 'itd_addmirror@files:itdownload.dll stdcall';
 
-procedure ITD_Internal_AddFileSize(url: PChar; destfilename: PChar; size: integer);
+procedure ITD_Internal_AddFileSize(url: PAnsiChar; destfilename: PAnsiChar; size: integer);
   external 'itd_addfilesize@files:itdownload.dll stdcall';
 
 function ITD_Internal_DownloadFiles(surface: hwnd): integer;
@@ -99,11 +105,17 @@ function ITD_Internal_DownloadFiles(surface: hwnd): integer;
 function ITD_FileCount: integer;
   external 'itd_filecount@files:itdownload.dll stdcall';
 
-function ITD_Internal_PostPage(url, buffer: PChar; length: integer): boolean;
+function ITD_Internal_PostPage(url, buffer: PAnsiChar; length: integer): boolean;
   external 'itd_postpage@files:itdownload.dll stdcall';
 
+type
+  TITD_AllowContinueEvent=function:integer;
 
 const
+  ITD_Offer_Continue = 0;
+  ITD_Silently_Continue = 1;
+  ITD_No_Continue = 2;
+
   ITDERR_SUCCESS = 0;
   ITDERR_USERCANCEL = 1;
   ITDERR_ERROR = 3;
@@ -133,10 +145,9 @@ const
   ITD_Event_DownloadPageEntered = 1;
   ITD_Event_DownloadPageLeft = 2;
   ITD_Event_DownloadFailed = 3;
-  
+
   ITD_Event_FileBegin = 4;
   ITD_Event_FileEnd = 5;
-  
 
 var
   ITD_AllowContinue: boolean;
@@ -145,23 +156,24 @@ var
 
   ITD_AfterSuccess: procedure(downloadPage: TWizardPage);
   ITD_EventHandler: procedure(event: integer);
+  ITD_AllowContinueEvent: TITD_AllowContinueEvent;
 
-procedure ITD_DownloadFiles();
+function ITD_DownloadFiles():integer;
 begin
-  ITD_Internal_DownloadFiles(0);
+  result:=ITD_Internal_DownloadFiles(0);
 end;
 
-procedure ITD_AddFile(const URL, filename: string);
+procedure ITD_AddFile(const URL, filename: AnsiString);
 begin
   ITD_Internal_AddFile(URL, filename);
 end;
 
-procedure ITD_AddMirror(const URL, filename: string);
+procedure ITD_AddMirror(const URL, filename: AnsiString);
 begin
   ITD_Internal_AddMirror(URL, filename);
 end;
 
-procedure ITD_AddFileSize(const URL, filename: string; size: integer);
+procedure ITD_AddFileSize(const URL, filename: AnsiString; size: integer);
 begin
   ITD_Internal_AddFileSize(URL, filename, size);
 end;
@@ -171,30 +183,36 @@ begin
   result := (itd_filecount = 0);
 end;
 
+function ITD_IsDownloadComplete(const filename:AnsiString):boolean;
+begin
+  result:=ITD_Internal_IsDownloadComplete(PAnsiChar(filename));
+end;
+
 procedure ITD_SetString(index: integer; value: string);
 begin
   itd_internal_setstring(index, value);
 end;
 
-function ITD_GetFileSize(const url: string; var size: cardinal): boolean;
+function ITD_GetFileSize(const url: AnsiString; var size: cardinal): boolean;
 begin
-  result := itd_internal_getfilesize(PChar(url), size);
+  result := itd_internal_getfilesize(PAnsiChar(url), size);
 end;
 
-function ITD_LoadStrings(const filename: string): boolean;
+function ITD_LoadStrings(const filename: AnsiString): boolean;
 begin
   result := itd_internal_loadstrings(filename);
 end;
 
-function ITD_GetString(index: integer): string;
+function ITD_GetString(index: integer): AnsiString;
 begin
-  itd_internal_getstring(index);
-  setlength(result, ITD_GetResultLen);
-  ITD_GetResultString(PChar(result), length(result));
+  ITD_Internal_GetString(index);
+  SetLength(result, ITD_GetResultLen);
+  ITD_GetResultString(PAnsiChar(result), length(result));
 end;
 
 procedure ITD_NowDoDownload(sender: TWizardPage);
 var err: integer;
+ allowcontinue:boolean;
 begin
   wizardform.backbutton.enabled := false;
   wizardform.nextbutton.enabled := false;
@@ -220,21 +238,41 @@ begin
       wizardform.backbutton.show();
       itd_retryonback := true;
 
-      wizardform.nextbutton.enabled := itd_allowcontinue;
-
       if ITD_EventHandler <> nil then
         ITD_EventHandler(ITD_Event_DownloadFailed);
 
-      if itd_allowcontinue then begin //Download failed, we can retry, continue, or exit
+      if (ITD_AllowContinueEvent <> nil) then begin
+        case ITD_AllowContinueEvent() of
+          ITD_Offer_Continue: allowcontinue:=true;
+          ITD_Silently_Continue:begin
+            wizardform.nextbutton.enabled := true;
+            wizardform.nextbutton.onclick(nil);
+
+            if itd_aftersuccess <> nil then
+              itd_aftersuccess(sender);
+
+            exit;
+          end;
+          ITD_No_Continue: allowcontinue:=false;
+        end;
+      end else
+        allowcontinue:=itd_allowcontinue;
+
+      if allowcontinue then begin
+        wizardform.nextbutton.enabled := true;
+
+        //Download failed, we can retry, continue, or exit
         sender.caption := ITD_GetString(ITDS_DownloadFailed);
         sender.description := ITD_GetString(ITDS_MessageFailRetryContinue);
 
-        MsgBox(ITD_GetString(ITDS_MessageFailRetryContinue), mbError, MB_OK)
+        MsgBox(ITD_GetString(ITDS_MessageFailRetryContinue), mbError, MB_OK);
       end else begin //Download failed, we must retry or exit setup
+        wizardform.nextbutton.enabled := false;
+
         sender.caption := ITD_GetString(ITDS_DownloadFailed);
         sender.description := ITD_GetString(ITDS_MessageFailRetry);
 
-        MsgBox(ITD_GetString(ITDS_MessageFailRetry), mbError, MB_OK)
+        MsgBox(ITD_GetString(ITDS_MessageFailRetry), mbError, MB_OK);
       end;
     end;
   end;
@@ -271,16 +309,16 @@ end;
 
 procedure ITD_Init;
 begin
- //Currently a NOP. Don't count on it in future.
+  //Currently a NOP, don't count on it in future!
 end;
 
-function ITD_PostPage(const url, data: string; out response: string): boolean;
+function ITD_PostPage(const url, data: AnsiString; out response: AnsiString): boolean;
 begin
-  result := ITD_Internal_PostPage(PChar(url), PChar(data), length(data));
+  result := ITD_Internal_PostPage(PAnsiChar(url), PAnsiChar(data), length(data));
 
   if result then begin
     setlength(response, ITD_GetResultLen);
-    ITD_GetResultString(PChar(response), length(response));
+    ITD_GetResultString(PAnsiChar(response), length(response));
   end;
 end;
 
@@ -316,8 +354,8 @@ begin
     ITD_Internal_SetOption(option, value);
 end;
 
-function ITD_GetOption(const option: string): string;
+function ITD_GetOption(const option: AnsiString): AnsiString;
 begin
   setlength(result, 500);
-  setlength(result, itd_internal_getoption(pchar(option), pchar(result), length(result)));
+  setlength(result, itd_internal_getoption(PAnsiChar(option), PAnsiChar(result), length(result)));
 end;

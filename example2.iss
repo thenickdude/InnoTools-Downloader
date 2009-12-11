@@ -40,17 +40,18 @@ begin
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
-var response:string;
+var
+ response:AnsiString;
 begin
  result:=true;
- 
+
  if CurPageID=inputpage.id then begin
    { The PHP script we post our data to is a simple one which just echos back the
      posted data, along with a little message. (It also escapes HTML characters
      so that it cannot be used in a XSS attack against my website.).
 
      For reference, here's the PHP script that receives the post and replies:
-     
+
      <?PHP
        global $HTTP_RAW_POST_DATA;
        echo "You sent this data to me:\r\n".htmlentities($HTTP_RAW_POST_DATA);
@@ -64,5 +65,4 @@ begin
    end;
  end;
 end;
-
 
