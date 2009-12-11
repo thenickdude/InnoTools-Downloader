@@ -133,10 +133,15 @@ const
   ITD_Event_DownloadPageEntered = 1;
   ITD_Event_DownloadPageLeft = 2;
   ITD_Event_DownloadFailed = 3;
+  
+  ITD_Event_FileBegin = 4;
+  ITD_Event_FileEnd = 5;
+  
 
 var
-  itd_allowcontinue: boolean;
-  itd_retryonback: boolean;
+  ITD_AllowContinue: boolean;
+  ITD_RetryOnBack: boolean;
+  ITD_CurrentFile: string;
 
   ITD_AfterSuccess: procedure(downloadPage: TWizardPage);
   ITD_EventHandler: procedure(event: integer);
