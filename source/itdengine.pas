@@ -17,7 +17,7 @@ const
   ITDERR_USERCANCEL = 1;
   ITDERR_ERROR = 3;
 
-  itdversion = '0.3.5';
+  itdversion = '0.4.0';
 
   //GUI consts
   second_column = 140;

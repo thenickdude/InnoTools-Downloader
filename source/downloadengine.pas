@@ -348,7 +348,7 @@ begin
 
     thread := TPostThread.Create(url, data, fhttp, GetCurrentThreadId);
     try
-      thread.resume;
+      thread.Start;
       while not thread.operationDone do begin
         handlemessage;
         if terminated then
@@ -427,7 +427,7 @@ begin
 
   thread := TFTPGetThread.Create(url, fFtp, GetCurrentThreadId);
   try
-    thread.resume;
+    thread.Start;
     while not thread.operationDone do begin
       handlemessage;
       if terminated then
@@ -470,7 +470,7 @@ begin
 
     thread := TGetThread.Create(url, fhttp, GetCurrentThreadId);
     try
-      thread.resume;
+      thread.Start;
       while not thread.operationDone do begin
         handlemessage;
         if terminated then
@@ -509,7 +509,7 @@ var thread: TFTPSizeThread;
 begin
   fFtp.Timeout := fTimeOut;
   thread := TFTPSizeThread.Create(url, fFtp, GetCurrentThreadId);
-  thread.resume;
+  thread.Start;
   while not thread.operationDone do begin
     handlemessage;
     if terminated then
@@ -532,7 +532,7 @@ begin
     SetOptions(FHTTP);
     fhttp.Timeout := fTimeOut;
     thread := THeadThread.Create(url, fhttp, GetCurrentThreadId);
-    thread.resume;
+    thread.Start;
     while not thread.operationDone do begin
       handlemessage;
       if terminated then
@@ -543,7 +543,6 @@ begin
       size := thread.size;
       result := true;
     end else begin
-        showmessage('fail');
       result := false;
     end;
   finally

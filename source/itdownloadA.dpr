@@ -1,4 +1,4 @@
-library itdownloadA;
+library itdownload;
 
 uses
   liteui in 'liteui.pas',

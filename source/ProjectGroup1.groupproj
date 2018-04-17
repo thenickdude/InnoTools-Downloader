@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{7AAD3AD3-C7EB-42C2-9FAA-7EEBAF6051FC}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="itdownloadA.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="itdownloadW.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="itdownloadA">
+        <MSBuild Projects="itdownloadA.dproj"/>
+    </Target>
+    <Target Name="itdownloadA:Clean">
+        <MSBuild Projects="itdownloadA.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="itdownloadA:Make">
+        <MSBuild Projects="itdownloadA.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="itdownloadW">
+        <MSBuild Projects="itdownloadW.dproj"/>
+    </Target>
+    <Target Name="itdownloadW:Clean">
+        <MSBuild Projects="itdownloadW.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="itdownloadW:Make">
+        <MSBuild Projects="itdownloadW.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="itdownloadA;itdownloadW"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="itdownloadA:Clean;itdownloadW:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="itdownloadA:Make;itdownloadW:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

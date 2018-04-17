@@ -1,0 +1,9 @@
+*.dcu
+*.dll
+*.identcache
+*.local
+help/html
+help/chm
+/.idea
+*.stat
+*.res
