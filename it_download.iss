@@ -1,9 +1,5 @@
 [Files]
-#IF DEFINED(UNICODE)
-Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')}\wide\ITDownload.dll; Flags: dontcopy; DestDir: {tmp}
-#ELSE
-Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')}\ansi\ITDownload.dll; Flags: dontcopy; DestDir: {tmp}
-#ENDIF
+Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\Downloader','InstallPath','')}\itdownload.dll; Flags: dontcopy; DestDir: {tmp}
 
 [Code]
 (*
@@ -40,7 +36,7 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
           Several small GUI fixes.
   0.3.2 - Minor tweaks to the English language file and the translation example script (example4.iss)
           Added Dutch translation by Hilbrand Edskes
-          Added French translation by Néo
+          Added French translation by Nï¿½o
   0.3.1 - Added language file examples, fixed several missing language strings
           Preliminary support for proxy server autodetection
           Allows the size of a file to be queried with ITD_GetFileSize
@@ -57,62 +53,104 @@ Source: {#emit ReadReg(HKEY_LOCAL_MACHINE,'Software\Sherlock Software\InnoTools\
   0.2.0 - Converted from DLL to pure native code
 *)
 
+function ITD_FileCount: integer;
+  external 'itd_filecount@files:itdownload.dll stdcall';
+
 procedure ITD_Cancel;
   external 'itd_cancel@files:itdownload.dll stdcall';
 
 procedure ITD_ClearFiles;
   external 'itd_clearfiles@files:itdownload.dll stdcall';
 
-function ITD_DownloadFile(url:string; destfilename:String): integer;
-  external 'itd_downloadfile@files:itdownload.dll stdcall';
-
 function ITD_GetResultLen: integer;
   external 'itd_getresultlen@files:itdownload.dll stdcall';
-
-procedure ITD_GetResultString(buffer: string; maxlen: integer);
-  external 'itd_getresultstring@files:itdownload.dll stdcall';
-
-function ITD_Internal_IsDownloadComplete(filename:string):boolean;
-  external 'itd_isdownloadcomplete@files:itdownload.dll stdcall';
 
 procedure ITD_Internal_InitUI(HostHwnd: dword);
   external 'itd_initui@files:itdownload.dll stdcall';
 
-function ITD_Internal_LoadStrings(filename: string): boolean;
-  external 'itd_loadstrings@files:itdownload.dll stdcall';
-
-procedure ITD_Internal_SetOption(option, value: string);
-  external 'itd_setoption@files:itdownload.dll stdcall';
-
-function ITD_Internal_GetFileSize(url: string; var size: Cardinal): boolean;
-  external 'itd_getfilesize@files:itdownload.dll stdcall';
-
 function ITD_Internal_GetString(index: integer): boolean;
   external 'itd_getstring@files:itdownload.dll stdcall';
-
-function ITD_Internal_GetOption(option: string; buffer: string; length: integer): integer;
-  external 'itd_getoption@files:itdownload.dll stdcall';
-
-procedure ITD_Internal_SetString(index: integer; value: string);
-  external 'itd_setstring@files:itdownload.dll stdcall';
-
-procedure ITD_Internal_AddFile(url: string; destfilename: string);
-  external 'itd_addfile@files:itdownload.dll stdcall';
-
-procedure ITD_Internal_AddMirror(url: string; destfilename: string);
-  external 'itd_addmirror@files:itdownload.dll stdcall';
-
-procedure ITD_Internal_AddFileSize(url: string; destfilename: string; size: integer);
-  external 'itd_addfilesize@files:itdownload.dll stdcall';
 
 function ITD_Internal_DownloadFiles(surface: hwnd): integer;
   external 'itd_downloadfiles@files:itdownload.dll stdcall';
 
-function ITD_FileCount: integer;
-  external 'itd_filecount@files:itdownload.dll stdcall';
+#IF DEFINED(UNICODE)
+
+function ITD_DownloadFile(url:string; destfilename:String): integer;
+  external 'itd_downloadfileW@files:itdownload.dll stdcall';
+
+procedure ITD_GetResultString(buffer: string; maxlen: integer);
+  external 'itd_getresultstringW@files:itdownload.dll stdcall';
+
+function ITD_Internal_IsDownloadComplete(filename:string):boolean;
+  external 'itd_isdownloadcompleteW@files:itdownload.dll stdcall';
+
+function ITD_Internal_LoadStrings(filename: string): boolean;
+  external 'itd_loadstringsW@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_SetOption(option, value: string);
+  external 'itd_setoptionW@files:itdownload.dll stdcall';
+
+function ITD_Internal_GetFileSize(url: string; var size: Cardinal): boolean;
+  external 'itd_getfilesizeW@files:itdownload.dll stdcall';
+
+function ITD_Internal_GetOption(option: string; buffer: string; length: integer): integer;
+  external 'itd_getoptionW@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_SetString(index: integer; value: string);
+  external 'itd_setstringW@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_AddFile(url: string; destfilename: string);
+  external 'itd_addfileW@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_AddMirror(url: string; destfilename: string);
+  external 'itd_addmirrorW@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_AddFileSize(url: string; destfilename: string; size: integer);
+  external 'itd_addfilesizeW@files:itdownload.dll stdcall';
 
 function ITD_Internal_PostPage(url: String; data:AnsiString; length: integer): boolean;
-  external 'itd_postpage@files:itdownload.dll stdcall';
+  external 'itd_postpageW@files:itdownload.dll stdcall';
+
+#ELSE
+
+function ITD_DownloadFile(url:string; destfilename:String): integer;
+  external 'itd_downloadfileA@files:itdownload.dll stdcall';
+
+procedure ITD_GetResultString(buffer: string; maxlen: integer);
+  external 'itd_getresultstringA@files:itdownload.dll stdcall';
+
+function ITD_Internal_IsDownloadComplete(filename:string):boolean;
+  external 'itd_isdownloadcompleteA@files:itdownload.dll stdcall';
+
+function ITD_Internal_LoadStrings(filename: string): boolean;
+  external 'itd_loadstringsA@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_SetOption(option, value: string);
+  external 'itd_setoptionA@files:itdownload.dll stdcall';
+
+function ITD_Internal_GetFileSize(url: string; var size: Cardinal): boolean;
+  external 'itd_getfilesizeA@files:itdownload.dll stdcall';
+
+function ITD_Internal_GetOption(option: string; buffer: string; length: integer): integer;
+  external 'itd_getoptionA@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_SetString(index: integer; value: string);
+  external 'itd_setstringA@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_AddFile(url: string; destfilename: string);
+  external 'itd_addfileA@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_AddMirror(url: string; destfilename: string);
+  external 'itd_addmirrorA@files:itdownload.dll stdcall';
+
+procedure ITD_Internal_AddFileSize(url: string; destfilename: string; size: integer);
+  external 'itd_addfilesizeA@files:itdownload.dll stdcall';
+
+function ITD_Internal_PostPage(url: String; data:AnsiString; length: integer): boolean;
+  external 'itd_postpageA@files:itdownload.dll stdcall';
+
+#ENDIF
 
 type
   TITD_AllowContinueEvent=function:integer;

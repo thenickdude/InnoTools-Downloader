@@ -178,11 +178,12 @@ end;
 {Add the contents of the file at 'filename' into the list}
 
 procedure TITDStrings.AppendFromFile(const filename: string);
-var keys: TStringlist;
+var
+  keys: TStringlist;
   temp: TMemIniFile;
   t1: integer;
 begin
-  temp := TMemIniFile.create(filename{$IFDEF UNICODE}, TEncoding.Unicode{$ENDIF});
+  temp := TMemIniFile.create(filename, TEncoding.Unicode);
   try
     keys := tstringlist.create;
     try
@@ -192,8 +193,6 @@ begin
     finally
       keys.free;
     end;
-
-
   finally
     temp.free;
   end;

@@ -9,8 +9,9 @@ unit itdengine;
 
 interface
 
-uses sysutils, windows, Classes, contnrs, liteui, downloadengine,
-  itdstrings;
+uses
+  sysutils, windows, Classes, contnrs, liteui, downloadengine,
+  itdstrings, AnsiStrings;
 
 const
   ITDERR_SUCCESS = 0;
@@ -152,6 +153,14 @@ var engine: TITDEngine;
 implementation
 
 uses formatting;
+
+function min(a, b: integer): integer;
+begin
+  if a < b then
+    result := a
+  else
+    result := b;
+end;
 
 constructor eerrorcode.create(code: Integer);
 begin
@@ -386,7 +395,8 @@ begin
 end;
 
 procedure TDLFile.querysize(wine: TDownloadEngine);
-var swap: string;
+var
+  swap: string;
   i: integer;
 begin
   for i := 0 to high(urls) do
@@ -853,7 +863,19 @@ begin
   end;
 end;
 
-function itd_downloadfile(url: PChar; destfilename: PChar): integer; stdcall;
+function itd_downloadfileA(url: PAnsiChar; destfilename: PAnsiChar): integer; stdcall;
+begin
+  try
+    result := engine.downloadfile(string(url), string(destfilename));
+  except
+    on e: EErrorCode do
+      result := e.errcode;
+  else
+    result := ITDERR_ERROR;
+  end;
+end;
+
+function itd_downloadfileW(url: PWideChar; destfilename: PWideChar): integer; stdcall;
 begin
   try
     result := engine.downloadfile(url, destfilename);
@@ -882,19 +904,34 @@ begin
   engine.clearfiles;
 end;
 
-procedure itd_addmirror(url, destfilename: PChar); stdcall;
+procedure itd_addmirrorA(url, destfilename: PAnsiChar); stdcall;
+begin
+  engine.AddMirror(string(url), string(destfilename));
+end;
+
+procedure itd_addmirrorW(url, destfilename: PWideChar); stdcall;
 begin
   engine.AddMirror(url, destfilename);
 end;
 
-procedure itd_addfile(url, destfilename: PChar); stdcall;
+procedure itd_addfileA(url, destfilename: PAnsiChar); stdcall;
+begin
+  engine.AddFile(string(url), string(destfilename));
+end;
+
+procedure itd_addfileW(url, destfilename: PWideChar); stdcall;
 begin
   engine.AddFile(url, destfilename);
 end;
 
-procedure itd_addfilesize(url: PChar; destfilename: PChar; size: integer); stdcall;
+procedure itd_addfilesizeA(url: PAnsiChar; destfilename: PAnsiChar; size: integer); stdcall;
 begin
-  engine.AddFile(url, destfilename, size);
+  engine.AddFile(string(url), string(destfilename), size);
+end;
+
+procedure itd_addfilesizeW(url: PWideChar; destfilename: PWideChar; size: integer); stdcall;
+begin
+  engine.AddFile(string(url), string(destfilename), size);
 end;
 
 procedure itd_initui(HostHwnd: dword); stdcall;
@@ -912,7 +949,15 @@ begin
   result := engine.count;
 end;
 
-procedure itd_setoption(option, value: PChar); stdcall;
+procedure itd_setoptionA(option, value: PAnsiChar); stdcall;
+begin
+  try
+    engine.setoption(string(option), string(value));
+  except
+  end;
+end;
+
+procedure itd_setoptionW(option, value: PWideChar); stdcall;
 begin
   try
     engine.setoption(option, value);
@@ -920,15 +965,34 @@ begin
   end;
 end;
 
-function itd_getoption(option: PChar; buffer: PChar; length: integer): integer; stdcall;
-var s: string;
+function itd_getoptionA(option: PAnsiChar; buffer: PAnsiChar; length: integer): integer; stdcall;
+var s: AnsiString;
+begin
+  s := AnsiString(engine.GetOption(string(option)));
+  AnsiStrings.StrLCopy(buffer, PAnsiChar(s), length - 1);
+  result := AnsiStrings.StrLen(buffer);
+end;
+
+function itd_getoptionW(option: PWideChar; buffer: PWideChar; length: integer): integer; stdcall;
+var s: WideString;
 begin
   s := engine.GetOption(option);
   StrLCopy(buffer, pchar(s), length - 1);
   result := StrLen(buffer);
 end;
 
-function itd_loadstrings(filename: PChar): boolean; stdcall;
+function itd_loadstringsA(filename: PAnsiChar): boolean; stdcall;
+begin
+  try
+    engine.Strings.loaddefaults;
+    engine.Strings.appendfromfile(string(filename));
+    result := true;
+  except
+    result := false;
+  end;
+end;
+
+function itd_loadstringsW(filename: PWideChar): boolean; stdcall;
 begin
   try
     engine.Strings.loaddefaults;
@@ -939,7 +1003,12 @@ begin
   end;
 end;
 
-procedure itd_setstring(index: integer; value: pchar); stdcall;
+procedure itd_setstringA(index: integer; value: PAnsiChar); stdcall;
+begin
+  engine.Strings[index] := string(value);
+end;
+
+procedure itd_setstringW(index: integer; value: PWideChar); stdcall;
 begin
   engine.Strings[index] := value;
 end;
@@ -950,12 +1019,27 @@ begin
   result := length(resultbuffer) > 0;
 end;
 
-function itd_postpage(url:PChar; buffer: PAnsiChar; length: integer): boolean; stdcall;
+function itd_postpageA(url:PAnsiChar; buffer: PAnsiChar; length: integer): boolean; stdcall;
 var
   data: AnsiString;
 begin
   try
     //Buffer may have embedded #0 so turn it into a Delphi string.
+    SetLength(data, length);
+    Move(buffer^, data[1], length);
+
+    result := engine.PostPage(string(url), data, resultbuffer);
+  except
+    result := false;
+  end;
+end;
+
+function itd_postpageW(url:PWideChar; buffer: PAnsiChar; length: integer): boolean; stdcall;
+var
+  data: AnsiString;
+begin
+  try
+      //Buffer may have embedded #0 so turn it into a Delphi string.
     SetLength(data, length);
     Move(buffer^, data[1], length);
 
@@ -965,21 +1049,26 @@ begin
   end;
 end;
 
-function min(a, b: integer): integer;
+procedure itd_getresultstringA(buffer: PAnsiChar; maxlen: integer); stdcall;
+var
+  asAnsi:AnsiString;
 begin
-  if a < b then
-    result := a
-  else
-    result := b;
+  asAnsi := AnsiString(resultbuffer);
+
+  Move(asAnsi[1], buffer^, min(length(asAnsi), maxlen));
 end;
 
-
-procedure itd_getresultstring(buffer: PChar; maxlen: integer); stdcall;
+procedure itd_getresultstringW(buffer: PWideChar; maxlen: integer); stdcall;
 begin
-  Move(resultbuffer[1], buffer^, min(length(resultbuffer), maxlen)*sizeof(resultbuffer[1]));
+  Move(resultbuffer[1], buffer^, min(length(resultbuffer), maxlen)*sizeof(buffer[1]));
 end;
 
-function itd_getfilesize(url: pchar; var size: cardinal): boolean; stdcall;
+function itd_getfilesizeA(url: PAnsiChar; var size: cardinal): boolean; stdcall;
+begin
+  result := engine.FWE.GetWebFileSize(string(url), size);
+end;
+
+function itd_getfilesizeW(url: PWideChar; var size: cardinal): boolean; stdcall;
 begin
   result := engine.FWE.GetWebFileSize(url, size);
 end;
@@ -989,14 +1078,36 @@ begin
   result := length(resultbuffer);
 end;
 
-function itd_isdownloadcomplete(filename:pchar):boolean; stdcall;
+function itd_isdownloadcompleteA(filename:PAnsiChar):boolean; stdcall;
 begin
-  result:= engine.FileDownloaded(filename);
+  result := engine.FileDownloaded(string(filename));
 end;
 
-exports itd_downloadfile, itd_addfile, itd_addfilesize, itd_clearfiles, itd_downloadfiles, itd_initui,
-  itd_cancel, itd_setoption, itd_getoption, itd_filecount, itd_setstring, itd_getstring, itd_loadstrings,
-  itd_addmirror, itd_postpage, itd_getresultstring, itd_getresultlen, itd_getfilesize, itd_isdownloadcomplete;
+function itd_isdownloadcompleteW(filename:PWideChar):boolean; stdcall;
+begin
+  result := engine.FileDownloaded(filename);
+end;
+
+exports
+  itd_downloadfileA, itd_downloadfileW,
+  itd_addfileA, itd_addfileW,
+  itd_addfilesizeA, itd_addfilesizeW,
+  itd_clearfiles,
+  itd_downloadfiles,
+  itd_initui,
+  itd_cancel,
+  itd_setoptionA, itd_setoptionW,
+  itd_getoptionA, itd_getoptionW,
+  itd_filecount,
+  itd_setstringA, itd_setstringW,
+  itd_getstring,
+  itd_loadstringsA, itd_loadstringsW,
+  itd_addmirrorA, itd_addmirrorW,
+  itd_postpageA, itd_postpageW,
+  itd_getresultstringA, itd_getresultstringW,
+  itd_getresultlen,
+  itd_getfilesizeA, itd_getfilesizeW,
+  itd_isdownloadcompleteA, itd_isdownloadcompleteW;
 
 initialization
   engine := TITDEngine.create;

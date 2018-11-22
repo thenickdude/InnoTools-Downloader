@@ -20,7 +20,7 @@ makedemos : install
 install : innotoolsdownloader.exe
 	innotoolsdownloader.exe /SILENT
 
-innotoolsdownloader.exe : innotoolsdownloader.iss $(EXAMPLES) wide\itdownload.dll ansi\itdownload.dll \
+innotoolsdownloader.exe : innotoolsdownloader.iss $(EXAMPLES) itdownload.dll\
 						  it_download.iss help/chm/ITDHelp.chm languages\*.ini
 	ISCC innotoolsdownloader.iss
 
@@ -36,6 +36,6 @@ help/html/index.html : help/ITDHelp.hnd
 		-only="Build html documentation" -output="Build HTML documentation:help/html"
 
 clean :
-	rm innotoolsdownloader.exe
+	rm -f innotoolsdownloader.exe itdownload.dll
 	rm -rf help/chm
 	rm -rf help/html

@@ -21,15 +21,14 @@ Compression=lzma
 SolidCompression=true
 OutputDir=.
 SetupLogging=false
-LicenseFile=License.txt
+LicenseFile=License.md
 AllowNoIcons=yes
-
 
 [Languages]
 Name: english; MessagesFile: compiler:Default.isl
 
 [Files]
-Source: license.txt; DestDir: {app}
+Source: License.md; DestDir: {app}
 Source: itdownload.dll; DestDir: {app}; Flags: ignoreversion
 Source: it_download.iss; DestDir: {app}
 Source: example1.iss; DestDir: {app}\examples
@@ -39,7 +38,7 @@ Source: example3 2.0.iss; DestDir: {app}\examples
 Source: example4.iss; DestDir: {app}\examples
 Source: example5.iss; DestDir: {app}\examples
 Source: example6.iss; DestDir: {app}\examples
-Source: ITDHelp.chm; DestDir: {app}
+Source: help\chm\ITDHelp.chm; DestDir: {app}
 Source: source\*.pas; DestDir: {app}\Source
 Source: source\*.dpr; DestDir: {app}\Source
 Source: source\*.dproj; DestDir: {app}\Source
@@ -58,5 +57,3 @@ Name: {group}\{cm:UninstallProgram,{#MyAppName}}; Filename: {uninstallexe}
 [Registry]
 Root: HKLM; Subkey: Software\Sherlock Software\InnoTools\Downloader; ValueType: string; ValueName: InstallPath; ValueData: {app}; Flags: uninsdeletekey
 Root: HKLM; Subkey: Software\Sherlock Software\InnoTools\Downloader; ValueType: string; ValueName: ScriptPath; ValueData: {app}\it_download.iss; Flags: uninsdeletekey
-[InstallDelete]
-Name: {app}\licence.txt; Type: files

@@ -2,19 +2,36 @@
 InnoTools Downloader is an Inno Setup script and DLL which allows you to download files as part of your installation. 
 
 ## Features
+- Support Inno Setup 5 ANSI / Unicode
 - Downloads from HTTP or FTP
 - Download with a progress screen, or without any UI
 - Send data to your webserver with easy POST requests, and read the responses
 - An example shows how your installer can check for updates before installation begins, and download an updated installer
-- Includes Brazilian Portuguese, Dutch, English and French translations
+- Includes Brazilian Portuguese, Dutch, English, French, Greek, and Spanish translations
 
-I'm using version 0.3.x with good success in my program PetzA (Screenshot below), why not try it out and tell me how it goes for you? :) 
+I'm using version 0.4.x with good success in my program PetzA (Screenshot below), why not try it out and tell me how it goes for you? :) 
 
 Documentation is included with ITD as help file. You can also [view the same documentation online](http://www.sherlocksoftware.org/innotools/itdhelp/index.html). 
 
-Get ITD now from the [Releases tab](https://github.com/thenickdude/InnoTools-Downloader/releases)!
-
 ![PetzA installation screenshot](screenshots/itd_ui.png) 
+
+## Installation
+
+Grab the installer from the [Releases tab](https://github.com/thenickdude/InnoTools-Downloader/releases). Run it
+to install ITD to `C:\Program Files (x86)\Sherlock Software\InnoTools\Downloader`. Go there to check
+out the help file and the example .iss files that show you how to use InnoTools Downloader.
+
+Each example begins by including `itdownload.iss`, which bundles ITD into your installer, then makes calls to it
+during installation to start downloads.
+
+## Included examples
+1. Downloads two files during installation, then installs those files into the destination
+2. Send data to your webserver over POST during installation, and read the response
+3. Check for a newer version of the installer before installation begins, download it and run it if found.
+4. Use ITD translations
+5. Integrate with InnoTools Tray to allow the installer to minimise to the tray during installation. Demonstrates
+ sending custom HTTP User Agent strings
+6. Allow installation to continue even if some non-critical files couldn't be successfully downloaded
 
 ## Licenses
 

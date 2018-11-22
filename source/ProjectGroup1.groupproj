@@ -3,10 +3,7 @@
         <ProjectGuid>{7AAD3AD3-C7EB-42C2-9FAA-7EEBAF6051FC}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="itdownloadA.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="itdownloadW.dproj">
+        <Projects Include="itdownload.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -17,32 +14,23 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="itdownloadA">
-        <MSBuild Projects="itdownloadA.dproj"/>
+    <Target Name="itdownload">
+        <MSBuild Projects="itdownload.dproj"/>
     </Target>
-    <Target Name="itdownloadA:Clean">
-        <MSBuild Projects="itdownloadA.dproj" Targets="Clean"/>
+    <Target Name="itdownload:Clean">
+        <MSBuild Projects="itdownload.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="itdownloadA:Make">
-        <MSBuild Projects="itdownloadA.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="itdownloadW">
-        <MSBuild Projects="itdownloadW.dproj"/>
-    </Target>
-    <Target Name="itdownloadW:Clean">
-        <MSBuild Projects="itdownloadW.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="itdownloadW:Make">
-        <MSBuild Projects="itdownloadW.dproj" Targets="Make"/>
+    <Target Name="itdownload:Make">
+        <MSBuild Projects="itdownload.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="itdownloadA;itdownloadW"/>
+        <CallTarget Targets="itdownload"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="itdownloadA:Clean;itdownloadW:Clean"/>
+        <CallTarget Targets="itdownload:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="itdownloadA:Make;itdownloadW:Make"/>
+        <CallTarget Targets="itdownload:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
